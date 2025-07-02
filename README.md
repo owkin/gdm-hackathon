@@ -16,12 +16,33 @@ gcloud config set project gemma-hcls25par-703
 gcloud auth login
 ```
 
-- Install the dependencies
+This way you should be able to push data to our bucket:
 ```bash
-uv venv --python 3.10
-source .venv/bin/activate
-uv pip install -r requirements.txt
+gsutil cp test gs://gdm-hackathon/test
 ```
+
+## Spawn a VM on GCP
+
+Go to Compute Engine: In the GCP Console, navigate to Compute Engine -> VM instances.
+
+Create Instance:
+- Name: hackathon-workbench.
+- Region: eu-west-4
+- Machine configuration -> GPU:
+    - Click Add GPU.
+    - GPU Type: NVIDIA T4 (g4 series)
+    - Number of GPUs: 1
+- Boot disk -> Change: This is the most important step.
+    - Click Change. A new panel will open.
+    - Operating system : Deep Learning on Linux
+    - Version : I chose "Deep Learning VM for PyTorch 2.4 with CUDA 12.4 M129" (last one)
+    - Increase disk size
+- Networking: Check the box for Allow HTTP traffic and Allow HTTPS traffic. This is essential to access the web-based IDE.
+- Security -> Service Account: Ensure it is set to Compute Engine default service account and that the Access Scope is Allow full access to all Cloud APIs. This lets the VM easily talk to your storage bucket.
+
+Click Create. It will take a few minutes to provision.
+
+You can then connect to the VM via ssh.
 
 ## Hackathon To-Do List
 
