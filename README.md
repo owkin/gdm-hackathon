@@ -1,18 +1,33 @@
 # gdm-hackathon
-=======
 
-# Project: Evolving Insight
-### A Multi-Modal Prompt Discovery System for Clinical Predictions
 
-Our goal is to use a genetic algorithm to discover the optimal text prompt that guides a frozen LLM to make accurate clinical predictions from multi-modal patient data. We do not train any models; we "train" the prompt.
+## Biomarker discovery
 
----
+Extract interpertable and predictive signal from multi-modal data.
+
+
+
+# Set up
+
+- Download the gcloud cli https://cloud.google.com/sdk/docs/install-sdk
+- Set the project and authenticate (with your hackathon account)
+```bash
+gcloud config set project gemma-hcls25par-703
+gcloud auth login
+```
+
+- Install the dependencies
+```bash
+uv venv --python 3.10
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
 
 ## Hackathon To-Do List
 
 ### 1. Environment & Setup (`uv`, GCP)
 
--   **[ ] Init Project:** Clone the repo. Everyone gets access to the GCP project.
+-   **[✅] Init Project:** Clone the repo. Everyone gets access to the GCP project.
 -   **[ ] Install Deps:** We're using `uv`. Create a `pyproject.toml` or `requirements.txt` and install dependencies.
     ```bash
     # Install uv first if you haven't
@@ -23,45 +38,32 @@ Our goal is to use a genetic algorithm to discover the optimal text prompt that 
     source .venv/bin/activate
     uv pip install -r requirements.txt # (e.g., google-cloud-aiplatform, pandas, tqdm)
     ```
--   **[ ] GCP Authentication:** Authenticate your local environment to access Google Cloud APIs.
-    ```bash
-    gcloud auth application-default login
-    gcloud config set project [your-gcp-project-id]
-    ```
--   **[ ] Deploy/Access Models:** We don't deploy, we *access*. The models are foundation endpoints on Vertex AI.
-    -   Enable the "Vertex AI API" in the GCP console.
+-   **[ ] Deploy/Access Models:** The models are foundation endpoints on Vertex AI / Gemini.
 
-### 2. Data Wrangling (The Multi-Modal Challenge)
+### 2. Data Wrangling
 
--   **[ ] Acknowledge Complexity:** This will take time. The goal is a unified data interface.
--   **[ ] Create Data Manifest:** Create a central `data/manifest.csv`. This is our source of truth. It links all data modalities for a given patient.
-    -   **Columns:** `patient_id`, `wsi_image_path`, `genomic_data_path`, `clinical_notes_path`, `ground_truth_response`
+-   **[ ] Create Data Manifest?:** Yaml file with all data files for each patient. Multiple modalities per patient.
 -   **[ ] Build Data Loader:** Write a Python function `get_patient_data(patient_id)` that reads the manifest and loads all data for one patient into a structured object or dictionary.
 
-### 3. The Core Engine (The "Fitness Function")
+### 3. The Core Engine
 
--   **[ ] Design the Prompt Structure:** The GA will evolve a prompt. Let's make it structured (e.g., a JSON object or a formatted string) so it can reference different data types.
-    -   *Example Evolved Prompt:* `"Analyze the following patient. Focus on the spatial arrangement of lymphocytes in the WSI. Correlate this with the provided genomic data to predict immunotherapy response."*
--   **[ ] Build the Pipeline Function:** Create the function `calculate_fitness(prompt)` which performs the *entire* evaluation.
-    1.  It takes one candidate prompt as input.
-    2.  It loops through a validation set of `patient_id`s from our manifest.
-    3.  **For each patient:**
-        -   It calls our `get_patient_data()` function.
-        -   It dynamically constructs a "mega-prompt" for Gemini, combining the candidate prompt, the patient's clinical notes, genomic data (as text), and the histopathology image.
-        -   It calls the Vertex AI Gemini 1.5 Pro endpoint with this multi-modal input.
-        -   It parses the model's prediction ("Responds" / "Does not Respond").
-    4.  It calculates the overall accuracy against the ground truth labels. This accuracy score *is* the fitness of the prompt.
+![image](workflow.png)
 
-### 4. Evolve & Discover
+-   **[ ] Each branch on the left is an agent from data loading to text description:** If the data is computed separately, the agent is a simple loading function. Each agent may call python functions or API endpoints. All agents should cache the results.
+    -   **[ ] HIPE reports:** Either load the report, or call the text description model from the aggregated results csv.
+    -   **[ ] Mpp4 Image description:** Cut the image, set the correct resolution, call multimodal model.
+    -   **[ ] Spt RNA-seq:** Load the spatial rna-seq, aggregate to patient-level, call text description model.
+    -   **[ ] Spatialized exression data:** Load the spatial rnas-seq, plot the gene expression heatmap, call multimodal model.
+    -   **[ ] Clinical notes:** Load the clinical data, call text description model.
+-   **[ ] Genetic algorithm loop:** Call the agents, aggregate the results, call the fitness model.
+    -   **[ ] Orchestrator description model:** Merge the text descriptions into a single text prompt.
+    -   **[ ] Predictor model:** Call the predictor model with the prompt and the orchestrator description.
+    -   **[ ] Fitness model:** Compute c-index / accuracy of the predictor model.
 
--   **[ ] Implement the Genetic Algorithm:**
-    -   **Population:** Generate an initial population of 50-100 hand-written and randomly generated prompts.
-    -   **Selection/Crossover/Mutation:** Implement the logic to create new generations of prompts by combining the best-performing ones and adding random variations.
--   **[ ] Launch the Run:** Execute the main script (`python evolve.py`) to start the evolutionary process. Log the best prompt and its fitness score from each generation.
--   **[ ] Analyze the Winner:** Once the run completes, examine the final, highest-scoring prompt. This is our "discovered" biomarker/feature set.
 
-### 5. ????
+We may optimize on the tool call of the orchestrator model.
 
--   **[ ] Build the Presentation Deck:** Create the slides telling our story.
-    -   **Key Slides:** System Architecture, The "Evolution" Graph (fitness over generations), and the side-by-side "Hero" example showing a bad prompt vs. our evolved prompt on the same patient data.
--   **[ ] Rehearse the Pitch:** Nail the narrative. We didn
+### 4. 
+
+-   **[ ] Frontend?** Build a simple frontend to visualize the result from multimodal data to clinical endpoint prediction
+-   **[ ] Target discovery?** Use TxGemma to discover targets from the description.
