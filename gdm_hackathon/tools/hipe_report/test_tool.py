@@ -5,7 +5,7 @@ Test script for the HIPE Report Tool
 
 # %%
 from gdm_hackathon.tools.hipe_report.hipe_tool import load_hipe_report
-from smolagents import CodeAgent
+from smolagents import ToolCallingAgent
 from gdm_hackathon.models.vertex_ai_model import VertexAIServerModel
 
 def test_hipe_report_tool():
@@ -32,26 +32,38 @@ def test_hipe_report_tool():
         print(f"Error testing tool: {e}")
 
 
+def test_with_vertex_ai_agent():
+    """Test with Vertex AI model using ToolCallingAgent."""
+    print("\n" + "="*60)
+    print("Testing with Vertex AI model using ToolCallingAgent")
+    print("="*60)
+    
+    try:
+        # Create an agent with the HIPE report tool
+        model = VertexAIServerModel(
+            model_id="medgemma",
+            project_id="gemma-hcls25par-703",
+            location="europe-west4",
+            endpoint_id="4761133837897957376",
+        )
+        agent = ToolCallingAgent(
+            tools=[load_hipe_report],
+            model=model,
+            name="hipe_report_agent"
+        )
+
+        # Use the agent to load a report
+        result = agent.run("Describe the immune infiltration for TCGA-2F-A9KO-01Z-00-DX1")
+        print(f"Vertex AI agent result: {result}")
+        
+    except Exception as e:
+        print(f"Error with Vertex AI agent: {e}")
+
+
 # %%
 
 if __name__ == "__main__":
     test_hipe_report_tool() 
+    test_with_vertex_ai_agent()
 
-# %%
-    # Create an agent with the HIPE report tool
-    model = VertexAIServerModel(
-        model_id="medgemma",
-        project_id="gemma-hcls25par-703",
-        location="europe-west4",
-        endpoint_id="4761133837897957376",
-    )
-    agent = CodeAgent(
-        tools=[load_hipe_report],
-        model=model,
-        name="hipe_report_agent"
-    )
-
-    # Use the agent to load a report
-    result = agent.run("Load the HIPE report for TCGA-2F-A9KO-01Z-00-DX1")
-    print(result)
 # %%

@@ -1,90 +1,94 @@
-"""Vertex AI Model
+"""Vertex AI Model for ToolCallingAgent
 
 This model connects to a Vertex AI endpoint using the Google Cloud AI Platform SDK.
+Designed to work with ToolCallingAgent which uses JSON-based tool calls.
 """
 
-from smolagents import Model, ChatMessage
-import google.auth
-import google.auth.transport.requests
-import threading
-import time
-from typing import List, Optional, Any, Dict
+from smolagents.models import ApiModel, ChatMessage, TokenUsage
 from google.cloud import aiplatform
+import json
 import re
 
 
-class VertexAIServerModel(Model):
+class VertexAIServerModel(ApiModel):
     """This model connects to a Vertex AI endpoint using the Google Cloud AI Platform SDK."""
 
     def __init__(
         self, model_id: str, project_id: str, location: str, endpoint_id: str, **kwargs
     ):
-        #  Try to import dependencies
-        try:
-            from google.auth import default
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                "Please install 'google-auth and google-cloud-aiplatform' to use VertexAIServerModel"
-            ) from None
-
-        # Initialize parent class with any additional keyword arguments
-        super().__init__(**kwargs)
-        self.model_id = model_id
+        # Initialize Vertex AI
+        aiplatform.init(project=project_id, location=location)
+        
+        # Store endpoint info for client creation
         self.project_id = project_id
         self.location = location
         self.endpoint_id = endpoint_id
-        self.kwargs = kwargs
-        self._refresh_task = None
-        self._last_input_token_count = 0
-        self._last_output_token_count = 0
+        
+        # Initialize parent class
+        super().__init__(model_id=model_id, **kwargs)
 
-        # Initialize credentials and set up Google Cloud authentication
-        creds_and_project = default(
-            scopes=["https://www.googleapis.com/auth/cloud-platform"]
-        )
-        self.credentials: Any = creds_and_project[0]
-        
-        # Initialize Vertex AI
-        aiplatform.init(project=self.project_id, location=self.location)
-        
-        # Create endpoint object
-        self.endpoint = aiplatform.Endpoint(
+    def create_client(self):
+        """Create a Vertex AI endpoint client."""
+        return aiplatform.Endpoint(
             endpoint_name=self.endpoint_id,
             project=self.project_id,
             location=self.location,
         )
-        
-        print(f"[VertexAIServerModel] Initialized with endpoint: {self.endpoint_id} in {self.location}")
-
-    @property
-    def last_input_token_count(self) -> int:
-        """Get the last input token count."""
-        return self._last_input_token_count or 0
-
-    @property
-    def last_output_token_count(self) -> int:
-        """Get the last output token count."""
-        return self._last_output_token_count or 0
 
     def generate(
         self,
-        messages: List[ChatMessage],
-        stop_sequences: Optional[List[str]] = None,
-        response_format: Optional[dict] = None,
-        tools_to_call_from: Optional[List] = None,
+        messages,
+        stop_sequences=None,
+        response_format=None,
+        tools_to_call_from=None,
         **kwargs,
-    ) -> ChatMessage:
-        """Generate a response from the model."""
+    ):
+        """Generate a response using the Vertex AI endpoint."""
+        # Use parent class to prepare completion kwargs
+        completion_kwargs = self._prepare_completion_kwargs(
+            messages=messages,
+            stop_sequences=stop_sequences,
+            tools_to_call_from=tools_to_call_from,
+            **kwargs,
+        )
         
-        # Convert ChatMessage objects to dict format
-        messages_dict = [msg.dict() for msg in messages]
+        # Extract the messages and other parameters
+        messages_dict = completion_kwargs.pop("messages")
+        max_tokens = completion_kwargs.get('max_tokens', 800)
+        temperature = completion_kwargs.get('temperature', 0.0)
         
-        # Convert messages to a single prompt
-        prompt = self._messages_to_prompt(messages_dict)
+        # Add system prompt for tool calling if tools are provided
+        system_prompt = ""
+        if tools_to_call_from:
+            system_prompt = """You are a helpful AI assistant that can call tools to help answer questions.
+
+When you need to call a tool, respond with a JSON object in this exact format:
+{"name": "tool_name", "arguments": {"param1": "value1"}}
+
+Available tools:
+"""
+            for tool in tools_to_call_from:
+                system_prompt += f"- {tool.name}: {tool.description}\n"
+                if hasattr(tool, 'inputs'):
+                    system_prompt += f"  Parameters: {tool.inputs}\n"
+            
+            system_prompt += """
+
+IMPORTANT: 
+- Only respond with JSON when calling tools
+- Use the exact tool names and parameter names shown above
+- Do not include any other text or explanations in your response
+- If you have a final answer, use the "final_answer" tool"""
         
-        # Extract parameters
-        max_tokens = kwargs.get('max_tokens', self.kwargs.get('max_tokens', 800))
-        temperature = kwargs.get('temperature', self.kwargs.get('temperature', 0.0))
+        # Convert messages to a simple prompt string
+        prompt_parts = []
+        if system_prompt:
+            prompt_parts.append(f"System: {system_prompt}")
+        
+        for msg in messages_dict:
+            prompt_parts.append(f"{msg['role'].title()}: {msg['content']}")
+        
+        prompt = "\n".join(prompt_parts)
         
         # Create instances for prediction
         instances = [
@@ -96,125 +100,92 @@ class VertexAIServerModel(Model):
             },
         ]
         
-        try:
-            # Make prediction using Vertex AI endpoint
-            response = self.endpoint.predict(
-                instances=instances, 
-                use_dedicated_endpoint=True
-            )
-            
-            # Extract the generated text
-            generated_text = response.predictions[0]
-            
-            # Post-process the response to convert markdown code blocks to <code> tags
-            # Convert ```python to <code> and ``` to </code>
-            processed_text = re.sub(r'```python\s*', '<code>\n', generated_text)
-            processed_text = re.sub(r'```\s*', '</code>\n', processed_text)
-            
-            # Create a ChatMessage response
-            message = ChatMessage(
-                role="assistant",
-                content=processed_text
-            )
-            
-            # Set token counts (approximate)
-            self._last_input_token_count = len(prompt.split())  # Rough approximation
-            self._last_output_token_count = len(generated_text.split())  # Rough approximation
-            
-            return message
-            
-        except Exception as e:
-            print(f"[VertexAIServerModel] Error during generation: {e}")
-            # Return error message as ChatMessage
+        # Make prediction
+        response = self.client.predict(
+            instances=instances, 
+            use_dedicated_endpoint=True
+        )
+        
+        # Extract the generated text
+        generated_text = response.predictions[0]
+        
+        # Try to extract JSON tool call from the response, seems necessary for non-coding models (e.g medgemma)
+        tool_call = self._extract_tool_call(generated_text)
+        
+        # Estimate token usage (rough approximation)
+        input_tokens = len(prompt.split())
+        output_tokens = len(generated_text.split())
+        
+        self._last_input_token_count = input_tokens
+        self._last_output_token_count = output_tokens
+        
+        # Create ChatMessage with tool call if found
+        if tool_call:
+            from smolagents.models import ChatMessageToolCall, ChatMessageToolCallFunction
             return ChatMessage(
                 role="assistant",
-                content=f"Error: API call failed. Details: {e}"
+                content=None,
+                tool_calls=[ChatMessageToolCall(
+                    function=ChatMessageToolCallFunction(
+                        name=tool_call["name"],
+                        arguments=tool_call["arguments"]
+                    ),
+                    id="call_1",
+                    type="function"
+                )],
+                raw=response,
+                token_usage=TokenUsage(
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                ),
+            )
+        else:
+            return ChatMessage(
+                role="assistant",
+                content=generated_text,
+                raw=response,
+                token_usage=TokenUsage(
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                ),
             )
 
-    def _messages_to_prompt(self, messages: List[Dict[str, Any]]) -> str:
-        """
-        Convert a list of messages to a single prompt string.
-        
-        Args:
-            messages: List of message dictionaries
-        
-        Returns:
-            Formatted prompt string
-        """
-        # Add system instruction about using tools
-        system_instruction = """You are a helpful AI assistant that can use Python tools to accomplish tasks. 
-
-IMPORTANT: When you see a tool name like `load_hipe_report`, DO NOT redefine the function. Instead, use the existing tool by calling it directly.
-
-CRITICAL: Always wrap your Python code in <code> tags like this:
-<code>
-result = load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
-print(result)
-</code>
-
-For example, if you need to load a HIPE report, use:
-<code>
-result = load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
-print(result)
-</code>
-
-Do NOT write:
-<code>
-def load_hipe_report(patient_id):
-    # This is wrong - don't redefine the tool
-    return "some data"
-</code>
-
-Always use the existing tools that are available to you and wrap your code in <code> tags."""
-        
-        prompt_parts = [f"System: {system_instruction}"]
-        
-        for message in messages:
-            role = message.get('role', 'user')
-            content = message.get('content', '')
-            
-            # Handle different content types
-            if isinstance(content, str):
-                content_text = content
-            elif isinstance(content, list):
-                # Handle multimodal content (list of dicts)
-                content_text = ""
-                for item in content:
-                    if isinstance(item, dict):
-                        if 'text' in item:
-                            content_text += item['text']
-                        elif 'type' in item and item['type'] == 'text' and 'text' in item:
-                            content_text += item['text']
-            else:
-                content_text = str(content)
-            
-            if role == 'system':
-                prompt_parts.append(f"System: {content_text}")
-            elif role == 'user':
-                prompt_parts.append(f"User: {content_text}")
-            elif role == 'assistant':
-                prompt_parts.append(f"Assistant: {content_text}")
-            else:
-                prompt_parts.append(content_text)
-        
-        return "\n".join(prompt_parts)
-
-    def _refresh_token(self):
-        """Refresh the Google Cloud token"""
+    def _extract_tool_call(self, text: str) -> dict | None:
         try:
-            # Get a fresh request object
-            request = google.auth.transport.requests.Request()
-            self.credentials.refresh(request)  # type: ignore
-        except Exception as e:
-            print(f"Token refresh failed: {e}")
-
-    def _start_refresh_loop(self):
-        """Start the token refresh loop"""
-
-        def refresh_loop():
-            while True:
-                time.sleep(3600)  # Refresh every hour
-                self._refresh_token()
-
-        self._refresh_thread = threading.Thread(target=refresh_loop, daemon=True)
-        self._refresh_thread.start()
+            # Find all code blocks labeled as tool_code or json
+            code_blocks = re.findall(r'```(?:tool_code|json)\s*(\{.*?\})\s*```', text, re.DOTALL)
+            for json_str in reversed(code_blocks):  # Start from the last one
+                try:
+                    tool_call = json.loads(json_str)
+                    if "name" in tool_call and "arguments" in tool_call:
+                        return tool_call
+                except Exception:
+                    continue
+            # Fallback: previous logic (standalone JSON objects)
+            json_block_match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
+            if json_block_match:
+                json_str = json_block_match.group(1)
+                tool_call = json.loads(json_str)
+                if "name" in tool_call and "arguments" in tool_call:
+                    return tool_call
+            json_matches = list(re.finditer(r'\{[^{}]*"name"[^{}]*"arguments"[^{}]*\}', text))
+            if json_matches:
+                json_match = json_matches[-1]
+                json_str = json_match.group(0)
+                tool_call = json.loads(json_str)
+                if "name" in tool_call and "arguments" in tool_call:
+                    return tool_call
+            json_matches = list(re.finditer(r'\{[^{}]*"name"[^{}]*\}', text))
+            if json_matches:
+                json_match = json_matches[-1]
+                json_str = json_match.group(0)
+                tool_call = json.loads(json_str)
+                if "name" in tool_call:
+                    if "arguments" not in tool_call:
+                        tool_call["arguments"] = {}
+                    return tool_call
+        except (json.JSONDecodeError, KeyError, Exception) as e:
+            print(f"JSON extraction error: {e}")
+            print(f"Text being parsed: {text[:200]}...")
+            pass
+        return None
