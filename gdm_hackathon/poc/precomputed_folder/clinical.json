@@ -1,0 +1,5 @@
+{
+  "patient1": "Patient is a 67-year-old female diagnosed with invasive ductal carcinoma of the right breast, stage IIA (T2N0M0). ECOG performance status: 1. Comorbidities include hypertension and type 2 diabetes. Treatment plan: lumpectomy followed by adjuvant chemotherapy (AC-T regimen) and radiation therapy.",
+  "patient2": "Patient is a 54-year-old male diagnosed with colorectal adenocarcinoma, stage IIIB (T3N2M0). ECOG performance status: 0. No significant comorbidities. Treatment plan: neoadjuvant chemoradiation (FOLFOX + radiation) followed by surgical resection.",
+  "patient3": "Patient is a 72-year-old female diagnosed with non-small cell lung cancer, stage IV (T3N2M1b). ECOG performance status: 2. Comorbidities include COPD and coronary artery disease. Treatment plan: palliative chemotherapy (carboplatin + pemetrexed) with targeted therapy for EGFR mutation."
+} 

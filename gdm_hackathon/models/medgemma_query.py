@@ -79,7 +79,7 @@ def get_survival_prediction_from_report_patient(
     # Survival prediction-focused system instruction
     system_instruction = (
         "You are a medical treatment specialist. Based on the following report, "
-        "provide clear and concise survival prediction"
+        "provide clear and concise survival prediction. "
     )
     
     return _query_vertex_ai(
