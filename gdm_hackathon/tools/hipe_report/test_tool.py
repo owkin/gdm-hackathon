@@ -5,7 +5,7 @@ Test script for the HIPE Report Tool
 
 # %%
 from gdm_hackathon.tools.hipe_report.hipe_tool import load_hipe_report
-from smolagents import ToolCallingAgent
+from smolagents import CodeAgent
 from gdm_hackathon.models.vertex_ai_model import VertexAIServerModel
 
 def test_hipe_report_tool():
@@ -41,19 +41,19 @@ def test_with_vertex_ai_agent():
     try:
         # Create an agent with the HIPE report tool
         model = VertexAIServerModel(
-            model_id="medgemma",
-            project_id="gemma-hcls25par-703",
+            model_id="google/gemma-3-27b-it-mg-one-click-deploy",
+            project_id="797788125421",
             location="europe-west4",
             endpoint_id="5382630586475085824",
         )
-        agent = ToolCallingAgent(
+        agent = CodeAgent(
             tools=[load_hipe_report],
             model=model,
             name="hipe_report_agent"
         )
 
         # Use the agent to load a report
-        result = agent.run("Describe the immune infiltration for TCGA-2F-A9KO-01Z-00-DX1")
+        result = agent.run("Show me the HIPE report for TCGA-2F-A9KO-01Z-00-DX1")
         print(f"Vertex AI agent result: {result}")
         
     except Exception as e:
