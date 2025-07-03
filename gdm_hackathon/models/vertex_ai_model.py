@@ -54,7 +54,7 @@ class VertexAIServerModel(ApiModel):
         
         # Extract the messages and other parameters
         messages_dict = completion_kwargs.pop("messages")
-        max_tokens = completion_kwargs.get('max_tokens', 800)
+        max_tokens = completion_kwargs.get('max_tokens', 2048)
         temperature = completion_kwargs.get('temperature', 0.0)
         
         # Convert messages to a simple prompt string
