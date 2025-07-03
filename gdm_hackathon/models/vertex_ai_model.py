@@ -57,36 +57,11 @@ class VertexAIServerModel(ApiModel):
         max_tokens = completion_kwargs.get('max_tokens', 800)
         temperature = completion_kwargs.get('temperature', 0.0)
         
-        # Add system prompt for tool calling if tools are provided
-        system_prompt = ""
-        if tools_to_call_from:
-            system_prompt = """You are a helpful AI assistant that can call tools to help answer questions.
-
-When you need to call a tool, respond with a JSON object in this exact format:
-{"name": "tool_name", "arguments": {"param1": "value1"}}
-
-Available tools:
-"""
-            for tool in tools_to_call_from:
-                system_prompt += f"- {tool.name}: {tool.description}\n"
-                if hasattr(tool, 'inputs'):
-                    system_prompt += f"  Parameters: {tool.inputs}\n"
-            
-            system_prompt += """
-
-IMPORTANT: 
-- Only respond with JSON when calling tools
-- Use the exact tool names and parameter names shown above
-- Do not include any other text or explanations in your response
-- If you have a final answer, use the "final_answer" tool"""
-        
         # Convert messages to a simple prompt string
         prompt_parts = []
-        if system_prompt:
-            prompt_parts.append(f"System: {system_prompt}")
-        
         for msg in messages_dict:
             prompt_parts.append(f"{msg['role'].title()}: {msg['content']}")
+        prompt_parts.append("<start_of_turn>model")
         
         prompt = "\n".join(prompt_parts)
         

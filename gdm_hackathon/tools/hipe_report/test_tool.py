@@ -44,7 +44,7 @@ def test_with_vertex_ai_agent():
             model_id="medgemma",
             project_id="gemma-hcls25par-703",
             location="europe-west4",
-            endpoint_id="4761133837897957376",
+            endpoint_id="5382630586475085824",
         )
         agent = ToolCallingAgent(
             tools=[load_hipe_report],

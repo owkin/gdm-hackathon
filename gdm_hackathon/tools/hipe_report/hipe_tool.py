@@ -16,15 +16,24 @@ def load_hipe_report(patient_id: str) -> str:
     """
     Load HIPE report data from Google Storage bucket for a specific patient.
     
+    This tool retrieves comprehensive immune infiltration analysis reports that contain detailed
+    histological analysis of whole slide images, including immune cell composition, spatial distribution,
+    and tumor-immune interactions.
+    
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'TCGA-2F-A9KO-01Z-00-DX1')
+        patient_id: The unique identifier for the patient.
         
     Returns:
-        The content of the HIPE report as a string
-        
-    Example:
-        >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
-        "Patient shows signs of..."
+        A comprehensive HIPE report as a string containing:
+        - Immune cell composition (lymphocytes, macrophages, neutrophils, eosinophils, mast cells)
+        - Cell counts and percentages of total cells
+        - Cell densities (cells/mm²) for different regions
+        - Spatial distribution analysis including:
+          * Cancer-immune cell proximity metrics
+          * Tumor Infiltrating Lymphocytes (TILs) diffusivity
+          * Co-occurrence patterns between cell types
+        - Global cell context and microenvironment analysis
+        - Summary interpretation of immune infiltration patterns
     """
     try:
         # Initialize GCS filesystem
