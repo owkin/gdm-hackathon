@@ -1,5 +1,6 @@
 # %%
 from smolagents import CodeAgent, FinalAnswerTool
+from gdm_hackathon.models.vertex_models import get_model
 from gdm_hackathon.poc.report_functions import get_clinical_report, get_hipe_report, get_spt_report
 
 from gdm_hackathon.poc.evaluation_tool import evaluate_report_relevance_in_zero_shot
@@ -8,30 +9,9 @@ import google.auth.transport.requests
 from smolagents import OpenAIServerModel
 final_answer_tool = FinalAnswerTool()
 
-PROJECT_ID = "gemma-hcls25par-703"
-LOCATION = "europe-west4"
-ENDPOINT_ID = "5382630586475085824" # The numeric ID of the endpoint
-MODEL_ID_FOR_AGENT = "google/gemma-3-27b-it-mg-one-click-deploy" # The model we deployed
+# %%
 
-ENDPOINT_URL = (
-    f"https://5382630586475085824.europe-west4-797788125421.prediction.vertexai.goog/v1/projects/"
-    f"{PROJECT_ID}/locations/{LOCATION}/endpoints/{ENDPOINT_ID}"
-)
-
-# 1. Get the default credentials from your environment
-creds, project = google.auth.default()
-
-# 2. Refresh the credentials to get a valid access token
-auth_req = google.auth.transport.requests.Request()
-creds.refresh(auth_req)
-access_token = creds.token
-
-
-model = OpenAIServerModel(
-    model_id=MODEL_ID_FOR_AGENT,
-    api_base=ENDPOINT_URL, # Leave this blank to query OpenAI servers.
-    api_key=access_token, # Switch to the API key for the server you're targeting.
-)
+model = get_model("gemma-3-27b")
 
 # %%
 # Define the coding agent

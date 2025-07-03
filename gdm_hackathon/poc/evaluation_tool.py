@@ -4,6 +4,7 @@ from smolagents import tool
 from gdm_hackathon.models.medgemma_query import get_survival_prediction_batch
 import re
 
+from gdm_hackathon.models.vertex_models import MODELS_DICT, LOCATION
 from gdm_hackathon.poc.report_functions import CACHE_FOLDER
 
 
@@ -26,8 +27,8 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
         ground_truth = json.load(f)
     
     # MedGemma endpoint configuration
-    ENDPOINT_ID = "6573269737961160704"
-    ENDPOINT_REGION = "europe-west4"
+    ENDPOINT_ID = MODELS_DICT["medgemma-27b"]['endpoint_id']
+    
     
     correct_predictions = 0
     total_predictions = 0
@@ -69,7 +70,7 @@ Provide your answer in JSON format with two fields:
         batch_predictions = get_survival_prediction_batch(
             medical_reports=patient_reports,
             endpoint_id=ENDPOINT_ID,
-            endpoint_region=ENDPOINT_REGION,
+            endpoint_region=LOCATION,
             max_tokens=2_000,
             temperature=0.0
         )
