@@ -90,7 +90,7 @@ coding_agent = CodeAgent(
         load_tp53_heatmap_report,
         load_t_nk_heatmap_report,
         # histopathological report family
-        load_histopathological_immune_infiltration_report, # histopathological report family
+        load_histopathological_immune_infiltration_report,
         load_histopathological_tumor_stroma_compartments_report,
         load_histopathological_tumor_nuclear_morphometry_report,
         # # genomic report family
