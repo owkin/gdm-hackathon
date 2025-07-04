@@ -37,3 +37,7 @@ load_histopathological_tumor_nuclear_morphometry_report,
 from gdm_hackathon.tools.clinical_tool import (
     load_clinical_report
 )
+
+from gdm_hackathon.tools.pubmed_tool import (
+    search_pubmed
+)

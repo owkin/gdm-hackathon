@@ -38,6 +38,7 @@ load_rb1_heatmap_report,
 load_s100a8_heatmap_report,
 load_tp53_heatmap_report,
 load_t_nk_heatmap_report,
+search_pubmed,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -80,6 +81,7 @@ load_histopathological_immune_infiltration_report, # histopathological report fa
 load_histopathological_tumor_stroma_compartments_report,
 load_histopathological_tumor_nuclear_morphometry_report,
 load_clinical_report, # clinical report
+search_pubmed, # pubmed tool
 final_answer_tool,], # agentic tools
     max_steps=20,
 )
@@ -113,10 +115,11 @@ def run_coding_agent():
 
     ## Your Task:
     1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="test_patient" to understand the type and quality of information provided.
-    2. **Select the most promising combination**: Select the most promising combination of 2 tools for survival prediction. 
-    3. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
-    4. **Iterate step 2 and 3**: Iterate step 2 and 3 until you ran out of step budget.
-    5. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
+    2. **Search pubmed**: Use reasoning and the search_pubmed tool to find the best report combination for survival prediction.
+    3. **Select the most promising combination**: Select the most promising combination of 2 tools for survival prediction.
+    4. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
+    5. **Iterate step 3 and 4**: Iterate step 3 and 4 until you ran out of step budget.
+    6. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
 
     ## Expected Output:
     Your response should include:1"
@@ -140,6 +143,11 @@ def run_coding_agent():
     print(load_cdk12_heatmap_report("test_patient"))
     print(load_histopathological_immune_infiltration_report("test_patient"))
     print(load_clinical_report("test_patient"))
+    </code>
+    
+    Your second output should be a search to contextualize the tools and the report combination.
+    <code>
+    print(search_pubmed("Biomarkers for bladder cancer"))
     </code>
 
     Let begin ! 
