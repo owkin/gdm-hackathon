@@ -9,7 +9,8 @@ Each tool loads the corresponding heatmap description from Google Storage bucket
 
 import json
 from smolagents import tool
-from gdm_hackathon.utils import convert_to_mw_id
+
+from gdm_hackathon.utils import convert_to_ch_id
 from gdm_hackathon.utils import get_gcs_fs
 
 @tool
@@ -555,7 +556,8 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
     if patient_id == "test_patient":
         patient_id = "CH_B_030"
     else:
-        patient_id = convert_to_mw_id(patient_id)
+        print(f"Converting patient ID {patient_id} to CH ID")
+        patient_id = convert_to_ch_id(patient_id)
     
     try:
         # Initialize GCS filesystem
