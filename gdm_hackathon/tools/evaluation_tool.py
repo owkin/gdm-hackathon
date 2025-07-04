@@ -2,8 +2,9 @@ import importlib
 import json
 import gcsfs
 from smolagents import tool
-from gdm_hackathon.models.medgemma_query import get_survival_prediction_batch
+from gdm_hackathon.models.medgemma_query import get_survival_prediction_from_report_patient
 import re
+import pandas as pd
 
 from gdm_hackathon.config import GCP_PROJECT_ID
 
@@ -47,116 +48,59 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     tool1_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool1_name)
     tool2_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool2_name)
 
-    # Generate reports for all patients
-    patient_reports = []
+    # Generate one report for all patients
     patient_names = list(ground_truth.keys())
     
+    report = ""
+    report += "--------------------------------\n"
     for patient_name in patient_names:
-        report = f"""Patient report for {patient_name}:
+        report += f"""Patient report for {patient_name}:
 
+{tool1_name} for {patient_name}:
 {tool1_fn(patient_name)}
 
+{tool2_name} for {patient_name}:
 {tool2_fn(patient_name)}
 
-Based on the above patient report, predict whether this patient will have a long or 
-short survival time.
+--------------------------------\n"""
 
-Provide your answer in JSON format with two fields:
+    report += f"""
+Based on the above patient reports, predict for each patient whether they will have a long or short survival time.
+There should be roughly the same number of long and short survival predictions.
+
+Provide your answer in JSON format with two fields for each patient:
 - "prediction": either "long survival" or "short survival"
 - "reasoning": a brief explanation (keep it short, max 2-3 sentences)
 
 ```json
 {{
-  "prediction": "long survival or short survival",
-  "reasoning": "brief explanation"
+"""
+    for patient_name in patient_names:
+        report += f"""
+  "{patient_name}": {{
+    "prediction": "long survival or short survival",
+    "reasoning": "brief explanation"
+  }}
+"""
+    report += """
 }}
 ```
 """
         
-        patient_reports.append(report)
-    
     # Get batch predictions from MedGemma
     try:
-        batch_predictions = get_survival_prediction_batch(
-            medical_reports=patient_reports,
+        prediction_response = get_survival_prediction_from_report_patient(
+            medical_report=report,
             system_instruction=SYSTEM_INSTRUCTION,
-            max_tokens=2_000,
+            max_tokens=4_096,
             temperature=0.0,
         )
-        
+        # Extract the prediction from the response
+        prediction_text = prediction_response.strip()
+        json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
         # Process predictions
-        for i, (patient_name, prediction_response) in enumerate(zip(patient_names, batch_predictions)):
-            try:
-                # Extract the prediction from the response
-                prediction_text = prediction_response['predictions'][0].strip()
-                
-                
-                # Look for JSON content in the response
-                json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(1)
-                    try:
-                        parsed_response = json.loads(json_str)
-                        prediction_field = parsed_response.get('prediction', '').lower()
-                        reasoning = parsed_response.get('reasoning', '')
-                        
-                        if 'long survival' in prediction_field:
-                            prediction = 1
-                        elif 'short survival' in prediction_field:
-                            prediction = 0
-                        else:
-                            raise ValueError(f"Invalid prediction value: {prediction_field}")
-                            
-                    except json.JSONDecodeError:
-                        raise ValueError(f"Failed to parse JSON: {json_str}")
-                else:
-                    # Fallback: look for the answer within <answer> tags
-                    answer_match = re.search(r'<answer>(.*?)</answer>', prediction_text, re.DOTALL)
-                    if answer_match:
-                        answer_content = answer_match.group(1).strip().lower()
-                    else:
-                        # Fallback: use the whole response
-                        answer_content = prediction_text.strip().lower()
-                    
-                    # Parse the response
-                    if 'long survival' in answer_content:
-                        prediction = 1
-                    elif 'short survival' in answer_content:
-                        prediction = 0
-                    else:
-                        # Fallback: try to find any indication of response
-                        if any(word in answer_content for word in ['good', 'positive', 'survival', 'success']):
-                            prediction = 1
-                        elif any(word in answer_content for word in ['bad', 'negative', 'fail', 'poor', 'death']):
-                            prediction = 0
-                        else:
-                            raise ValueError(f"Could not parse response: {answer_content}")
-                
-                # Compare with ground truth
-                true_value = ground_truth[patient_name]
-                is_correct = prediction == true_value
-                
-                if is_correct:
-                    correct_predictions += 1
-                
-                total_predictions += 1
-                
-                results[patient_name] = {
-                    'prediction': prediction,
-                    'ground_truth': true_value,
-                    'correct': is_correct,
-                    'raw_response': prediction_text,
-                    'reasoning': reasoning if 'reasoning' in locals() else 'No reasoning provided'
-                }
-                
-            except Exception as e:
-                results[patient_name] = {
-                    'error': f"Failed to parse prediction: {str(e)}",
-                    'ground_truth': ground_truth[patient_name],
-                    'raw_response': prediction_response
-                }
-                total_predictions += 1
-                
+        results = json.loads(json_match.group(1))
+        total_predictions = len(results)
     except Exception as e:
         # If batch fails, fall back to individual processing
         for patient_name in patient_names:
@@ -178,25 +122,25 @@ Provide your answer in JSON format with two fields:
     tn_examples = []
     fn_examples = []
     
-    for patient, result in results.items():
-        if 'error' not in result:
-            prediction = result['prediction']
-            ground_truth = result['ground_truth']
-            
-            if prediction == 1 and ground_truth == 1:
-                true_positives += 1
-                tp_examples.append((patient, result))
-            elif prediction == 1 and ground_truth == 0:
-                false_positives += 1
-                fp_examples.append((patient, result))
-            elif prediction == 0 and ground_truth == 0:
-                true_negatives += 1
-                tn_examples.append((patient, result))
-            elif prediction == 0 and ground_truth == 1:
-                false_negatives += 1
-                fn_examples.append((patient, result))
+    for patient in patient_names:
+        if patient not in results:
+            continue
+        prediction = results[patient]['prediction']
+        if prediction == 'long survival' and ground_truth[patient] == 1:
+            true_positives += 1
+            tp_examples.append((patient, results[patient]))
+        elif prediction == 'long survival' and ground_truth[patient] == 0:
+            false_positives += 1
+            fp_examples.append((patient, results[patient]))
+        elif prediction == 'short survival' and ground_truth[patient] == 0:
+            true_negatives += 1
+            tn_examples.append((patient, results[patient]))
+        elif prediction == 'short survival' and ground_truth[patient] == 1:
+            false_negatives += 1
+            fn_examples.append((patient, results[patient]))
     
     # Calculate metrics
+    correct_predictions = true_positives + true_negatives
     accuracy = (correct_predictions / total_predictions) * 100 if total_predictions > 0 else 0
     precision = (true_positives / (true_positives + false_positives)) * 100 if (true_positives + false_positives) > 0 else 0
     recall = (true_positives / (true_positives + false_negatives)) * 100 if (true_positives + false_negatives) > 0 else 0
@@ -230,7 +174,7 @@ Provide your answer in JSON format with two fields:
         patient, result = random.choice(tp_examples)
         result_summary += f"\nTrue Positive Example:"
         result_summary += f"\n  Predicted: long survival, Actual: long survival ✓"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nTrue Positive Example: No patients in this category\n"
     
@@ -238,7 +182,7 @@ Provide your answer in JSON format with two fields:
         patient, result = random.choice(fp_examples)
         result_summary += f"\nFalse Positive Example:"
         result_summary += f"\n  Predicted: long survival, Actual: short survival ✗"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nFalse Positive Example: No patients in this category\n"
     
@@ -246,7 +190,7 @@ Provide your answer in JSON format with two fields:
         patient, result = random.choice(tn_examples)
         result_summary += f"\nTrue Negative Example:"
         result_summary += f"\n  Predicted: short survival, Actual: short survival ✓"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nTrue Negative Example: No patients in this category\n"
     
@@ -254,7 +198,7 @@ Provide your answer in JSON format with two fields:
         patient, result = random.choice(fn_examples)
         result_summary += f"\nFalse Negative Example:"
         result_summary += f"\n  Predicted: short survival, Actual: long survival ✗"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nFalse Negative Example: No patients in this category\n"
     
