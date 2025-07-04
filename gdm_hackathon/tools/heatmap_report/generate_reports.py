@@ -7,7 +7,6 @@ the medgemma-4b multimodal model, and saves the descriptions back to the bucket.
 """
 # %%
 
-import gcsfs
 from PIL import Image
 from io import BytesIO
 import json
@@ -16,6 +15,7 @@ import requests
 from datetime import datetime
 from gdm_hackathon.config import GCP_PROJECT_ID, ENDPOINT_MODELS_DICT
 from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url
+from gdm_hackathon.utils import get_gcs_fs
 
 MODEL="gemma-3-27b"
 
@@ -43,7 +43,7 @@ def generate_heatmap_description(patient_id: str, feature: str, reference_featur
     """
     try:
         # Initialize GCS filesystem
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        fs = get_gcs_fs()
         bucket_name = "gdm-hackathon"
         
         # Set default reference features if none provided
@@ -189,7 +189,7 @@ def list_patients_and_features() -> tuple[list[str], list[str]]:
     """
     try:
         # Initialize GCS filesystem
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        fs = get_gcs_fs()
         bucket_name = "gdm-hackathon"
         patient_path = f"{bucket_name}/data/heatmaps/"
         
