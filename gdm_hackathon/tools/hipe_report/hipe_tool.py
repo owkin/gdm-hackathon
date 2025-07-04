@@ -13,7 +13,7 @@ from smolagents import tool
 from gdm_hackathon.config import GCP_PROJECT_ID
 
 
-def _find_report(subdirectory: str) -> Optional[str]:
+def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
     # Initialize GCS filesystem
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
 
@@ -57,11 +57,10 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
         "Patient shows signs of..."
     """
     try:
-
-        report_path = _find_report("hipe_reports_immune_mw")
+        report_path = _find_report("hipe_reports_immune_mw", patient_id)
 
         if not report_path:
-            return f"Error: HIPE report not found for patient {patient_id}."
+            return f"Error: HIPE immune infiltration report not found for patient {patient_id}."
 
         # Read the HIPE report content
         with fs.open(report_path, 'r') as f:
@@ -71,6 +70,37 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
 
     except Exception as e:
         return f"Error loading immune infiltration report for patient {patient_id}: {str(e)}"
+
+
+@tool
+def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> str:
+    """
+    Load a histopathological report assessing the organization of the tumor-stroma compartments.
+
+    Args:
+        patient_id: The unique identifier for the patient (e.g., 'TCGA-2F-A9KO-01Z-00-DX1')
+
+    Returns:
+        The content of the tumor-stroma compartment report as a string
+
+    Example:
+        >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
+        "Patient shows signs of..."
+    """
+    try:
+        report_path = _find_report("hipe_reports_tumor_stroma_compartments_mw", patient_id)
+
+        if not report_path:
+            return f"Error: HIPE tumor stroma compartment report not found for patient {patient_id}."
+
+        # Read the HIPE report content
+        with fs.open(report_path, 'r') as f:
+            content = f.read()
+
+        return f"Histopathological assessment of the tumor stroma compartments for {patient_id}:\n\n{content}"
+
+    except Exception as e:
+        return f"Error loading tumor-stroma compartment report for patient {patient_id}: {str(e)}"
 
 
 # %%
