@@ -33,3 +33,7 @@ load_histopathological_immune_infiltration_report,
 load_histopathological_tumor_stroma_compartments_report,
 load_histopathological_tumor_nuclear_morphometry_report,
 )
+
+from gdm_hackathon.tools.clinical_tool import (
+    load_clinical_report
+)
