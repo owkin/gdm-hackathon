@@ -25,7 +25,7 @@ def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
     
     if patient_id == "test_patient":
         patient_id = "MW_B_007"
-        
+
     # Construct the path to the HIPE report in the bucket
     bucket_name = "gdm-hackathon"
 
@@ -62,7 +62,7 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
         The content of the immune infiltration report as a string
 
     Example:
-        >>> get_hipe_report("test_patient")
+        >>> load_histopathological_immune_infiltration_report("test_patient")
         "Patient shows signs of..."
     """
     fs = _get_gcs_fs()
@@ -95,7 +95,7 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
         The content of the tumor-stroma compartment report as a string
 
     Example:
-        >>> load_hipe_report("test_patient")
+        >>> load_histopathological_tumor_stroma_compartments_report("test_patient")
         "Patient shows signs of..."
     """
     fs = _get_gcs_fs()
@@ -122,13 +122,13 @@ def load_histopathological_tumor_nuclear_morphometry_report(patient_id: str) -> 
     Load a histopathological report assessing the tumor nuclear morphometry.
 
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'TCGA-2F-A9KO-01Z-00-DX1')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
 
     Returns:
         The content of the tumor nuclear morphometry report as a string
 
     Example:
-        >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
+        >>> load_histopathological_tumor_nuclear_morphometry_report("test_patient")
         "Patient shows signs of..."
     """
     fs = _get_gcs_fs()
