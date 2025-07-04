@@ -10,6 +10,12 @@ from gdm_hackathon.tools.bulk_rnaseq.pathway_tool import (
     load_egfr_pathway_report,
     load_pi3k_pathway_report,
     load_anti_pd1_pathway_report,
+    load_tgf_beta_pathway_report,
+    load_hypoxia_pathway_report,
+    load_emt_pathway_report,
+    load_cell_cycle_pathway_report,
+    load_ddr_deficiency_pathway_report,
+    load_p53_pathway_report,
 )
 from gdm_hackathon.models.vertex_models import get_model
 from smolagents import CodeAgent
@@ -36,7 +42,18 @@ def test_with_vertex_ai_agent():
         # Create an agent with the HIPE report tool
         model = get_model("gemma-3-27b")
         agent = CodeAgent(
-            tools=[load_fgfr3_pathway_report, load_egfr_pathway_report, load_pi3k_pathway_report, load_anti_pd1_pathway_report],
+            tools=[
+                load_fgfr3_pathway_report,
+                load_egfr_pathway_report,
+                load_pi3k_pathway_report,
+                load_anti_pd1_pathway_report,
+                load_tgf_beta_pathway_report,
+                load_hypoxia_pathway_report,
+                load_emt_pathway_report,
+                load_cell_cycle_pathway_report,
+                load_ddr_deficiency_pathway_report,
+                load_p53_pathway_report
+            ],
             model=model,
             name="pathway_report_agent"
         )
@@ -55,5 +72,4 @@ if __name__ == "__main__":
     test_heatmap_report_tools() 
     test_with_vertex_ai_agent()
 
-#
 # %%
