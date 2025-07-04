@@ -3,20 +3,22 @@
 def convert_to_mw_id(patient_id: str) -> str:
     """Convert the patient ID to the MW ID format."""
     mapping = {
-        "CH_B_030a": "MW_B_001a",
-        "CH_B_033a": "MW_B_002a",
-        "CH_B_037a": "MW_B_003a",
-        "CH_B_041a": "MW_B_014a",
-        "CH_B_046a": "MW_B_004a",
-        "CH_B_059a": "MW_B_005a",
-        "CH_B_062a": "MW_B_006a",
-        "CH_B_064a": "MW_B_007a",
-        "CH_B_068a": "MW_B_008a",
-        "CH_B_069a": "MW_B_009a",
-        "CH_B_073a": "MW_B_015a",
-        "CH_B_074a": "MW_B_010a",
-        "CH_B_075a": "MW_B_011a",
-        "CH_B_079a": "MW_B_012a",
-        "CH_B_087a": "MW_B_013a",
+        "CH_B_030": "MW_B_001",
+        "CH_B_033": "MW_B_002",
+        "CH_B_037": "MW_B_003",
+        "CH_B_041": "MW_B_014",
+        "CH_B_046": "MW_B_004",
+        "CH_B_059": "MW_B_005",
+        "CH_B_062": "MW_B_006",
+        "CH_B_064": "MW_B_007",
+        "CH_B_068": "MW_B_008",
+        "CH_B_069": "MW_B_009",
+        "CH_B_073": "MW_B_015",
+        "CH_B_074": "MW_B_010",
+        "CH_B_075": "MW_B_011",
+        "CH_B_079": "MW_B_012",
+        "CH_B_087": "MW_B_013",
     }
-    return mapping[patient_id]
+
+    reverse_mapping = {v: k for k, v in mapping.items()}
+    return reverse_mapping[patient_id]
