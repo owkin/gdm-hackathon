@@ -1,11 +1,11 @@
 import importlib
 import json
+import gcsfs
 from smolagents import tool
 from gdm_hackathon.models.medgemma_query import get_survival_prediction_batch
 import re
 
-from gdm_hackathon.models.vertex_models import MODELS_DICT, LOCATION
-from gdm_hackathon.poc.report_functions import CACHE_FOLDER
+from gdm_hackathon.config import GCP_PROJECT_ID
 
 
 @tool
@@ -23,20 +23,19 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     """
     
     # Load ground truth data
-    with open(CACHE_FOLDER / 'response_to_treatment.json', 'r') as f:
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+    bucket_name = "gdm-hackathon"
+    ground_truth_path = f"gs://{bucket_name}/data/binary_os_mw_bladder.json"
+    with fs.open(ground_truth_path, 'r') as f:
         ground_truth = json.load(f)
-    
-    # MedGemma endpoint configuration
-    ENDPOINT_ID = MODELS_DICT["medgemma-27b"]['endpoint_id']
-    
     
     correct_predictions = 0
     total_predictions = 0
     results = {}
     
     # import the tools function from the report_functions.py file using their names
-    tool1_fn = getattr(importlib.import_module("gdm_hackathon.poc.report_functions"), tool1_name)
-    tool2_fn = getattr(importlib.import_module("gdm_hackathon.poc.report_functions"), tool2_name)
+    tool1_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool1_name)
+    tool2_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool2_name)
 
     # Generate reports for all patients
     patient_reports = []
@@ -69,8 +68,6 @@ Provide your answer in JSON format with two fields:
     try:
         batch_predictions = get_survival_prediction_batch(
             medical_reports=patient_reports,
-            endpoint_id=ENDPOINT_ID,
-            endpoint_region=LOCATION,
             max_tokens=2_000,
             temperature=0.0,
         )

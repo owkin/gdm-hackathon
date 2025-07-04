@@ -2,7 +2,7 @@ import json
 from smolagents import tool
 from pathlib import Path
 
-CACHE_FOLDER = Path("/Users/apignet/Documents/Codebase/gdm-hackathon/gdm_hackathon/poc/precomputed_folder")
+CACHE_FOLDER = Path("/home/apignet/gdm-hackathon/gdm_hackathon/poc/precomputed_folder")
 
 @tool
 def get_clinical_report(patient_name: str) -> str:
@@ -20,10 +20,7 @@ def get_clinical_report(patient_name: str) -> str:
     """
     with open(CACHE_FOLDER / 'clinical.json', 'r') as f:
         data = json.load(f)
-    report =data.get(patient_name, "Patient not found")
-
-    if report == "Patient not found":
-        return _the_tool_but_not_cached(patient_name)
+    return data.get(patient_name, "Patient not found")
 
 @tool
 def get_hipe_report(patient_name: str) -> str:

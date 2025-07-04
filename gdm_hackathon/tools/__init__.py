@@ -1,3 +1,31 @@
 """
 Tools package for GDM Hackathon
 """ 
+
+from gdm_hackathon.tools.heatmap_report.heatmap_tool import (
+load_cdk12_heatmap_report, 
+load_dc_heatmap_report,
+load_b_cell_heatmap_report,
+load_egfr_heatmap_report,
+load_erbb2_heatmap_report,
+load_endothelial_heatmap_report,
+load_epithelial_heatmap_report,
+load_fgfr3_heatmap_report,
+load_fibroblast_heatmap_report,
+load_granulocyte_heatmap_report,
+load_il1b_heatmap_report,
+load_krt7_heatmap_report,
+load_malignant_bladder_heatmap_report,
+load_mast_heatmap_report,
+load_momac_heatmap_report,
+load_muscle_heatmap_report,
+load_other_heatmap_report,
+load_pik3ca_heatmap_report,
+load_plasma_heatmap_report,
+load_rb1_heatmap_report,
+load_s100a8_heatmap_report,
+load_tp53_heatmap_report,
+load_t_nk_heatmap_report,
+)
+
+
