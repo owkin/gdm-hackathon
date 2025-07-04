@@ -5,8 +5,9 @@ from smolagents import tool
 from gdm_hackathon.models.medgemma_query import get_survival_prediction_from_report_patient
 import re
 import pandas as pd
-
-from gdm_hackathon.config import GCP_PROJECT_ID
+import requests
+from gdm_hackathon.config import GCP_PROJECT_ID, ENDPOINT_MODELS_DICT
+from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url
 
 SYSTEM_INSTRUCTION = (
     "You are a highly skilled biomedical researcher with extensive expertise in "
@@ -64,7 +65,7 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
 
 --------------------------------\n"""
 
-    report += f"""
+    report += """
 Based on the above patient reports, predict for each patient whether they will have a long or short survival time.
 There should be roughly the same number of long and short survival predictions.
 
@@ -73,7 +74,7 @@ Provide your answer in JSON format with two fields for each patient:
 - "reasoning": a brief explanation (keep it short, max 2-3 sentences)
 
 ```json
-{{
+{
 """
     for patient_name in patient_names:
         report += f"""
@@ -83,8 +84,11 @@ Provide your answer in JSON format with two fields for each patient:
   }}
 """
     report += """
-}}
+}
 ```
+
+```json
+{
 """
         
     # Get batch predictions from MedGemma
@@ -92,20 +96,27 @@ Provide your answer in JSON format with two fields for each patient:
         prediction_response = get_survival_prediction_from_report_patient(
             medical_report=report,
             system_instruction=SYSTEM_INSTRUCTION,
-            max_tokens=4_096,
+            max_tokens=1_024,
             temperature=0.0,
         )
         # Extract the prediction from the response
         prediction_text = prediction_response.strip()
+        # add back the ```json and ``` at the beginning and end of the prediction_text if needed
+        if not prediction_text.startswith('```json'):
+            prediction_text = '```json\n{\n' + prediction_text
+        if not prediction_text.endswith('```'):
+            prediction_text = prediction_text + '\n```'
         json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
         # Process predictions
         results = json.loads(json_match.group(1))
         total_predictions = len(results)
     except Exception as e:
-        # If batch fails, fall back to individual processing
+        print(f"MedGemma API call failed: {e}")
+        print(prediction_text)
+        # If MedGemma fails completely, fall back to individual processing
         for patient_name in patient_names:
             results[patient_name] = {
-                'error': f"Batch processing failed: {str(e)}",
+                'error': f"MedGemma API call failed: {str(e)}",
                 'ground_truth': ground_truth[patient_name]
             }
             total_predictions += 1
@@ -124,6 +135,8 @@ Provide your answer in JSON format with two fields for each patient:
     
     for patient in patient_names:
         if patient not in results:
+            continue
+        if "prediction" not in results[patient]:
             continue
         prediction = results[patient]['prediction']
         if prediction == 'long survival' and ground_truth[patient] == 1:
