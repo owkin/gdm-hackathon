@@ -14,8 +14,8 @@ import json
 import base64
 import requests
 from datetime import datetime
-from gdm_hackathon.config import GCP_PROJECT_ID
-from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url, MODELS_DICT
+from gdm_hackathon.config import GCP_PROJECT_ID, ENDPOINT_MODELS_DICT
+from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url
 
 MODEL="gemma-3-27b"
 
@@ -139,7 +139,7 @@ def generate_heatmap_description(patient_id: str, feature: str, reference_featur
         }
         
         payload = {
-            "model": MODELS_DICT[MODEL]["model_id"],
+            "model": ENDPOINT_MODELS_DICT[MODEL]["model_id"],
             "messages": messages,
             "max_tokens": 1024,
             "temperature": 0.2

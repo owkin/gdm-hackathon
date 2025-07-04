@@ -96,7 +96,7 @@ def run_coding_agent():
     - Returns an accuracy score showing how well the combined reports predict treatment response
 
     ## Your Task:
-    1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="patient1" to understand the type and quality of information provided.
+    1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="test_patient" to understand the type and quality of information provided.
     2. **Select the most promising combination**: Select the 3 most promising combination of 2 tools for survival prediction. 
     3. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
     4. **Iterate at most 3 times step 2 and 3**: Iterate step 2 and 3.
@@ -120,9 +120,9 @@ def run_coding_agent():
 
     Your first output should be a test:
 
-    Thought: I will proceed step by step and test the tool load_cdk12_heatmap_report on patient1. 
+    Thought: I will proceed step by step and test the tool load_cdk12_heatmap_report on test_patient. 
     <code>
-    print(load_cdk12_heatmap_report("patient1"))
+    print(load_cdk12_heatmap_report("test_patient"))
     </code>
 
     Let begin ! 
