@@ -8,15 +8,21 @@ import re
 from gdm_hackathon.config import GCP_PROJECT_ID
 
 SYSTEM_INSTRUCTION = (
-    "You are a medical treatment specialist. Based on the following report, "
-    "provide clear and concise survival prediction. The population is bladder cancer patients."
+    "You are a highly skilled biomedical researcher with extensive expertise in "
+    "analyzing various types of medical data, including H&E stained images, bulk "
+    "RNA sequencing, spatial transcriptomics, and comprehensive clinical and treatment "
+    "records. Your primary task is to predict patient survival based on provided "
+    "medical reports."
 )
 
 @tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
     """
-    Evaluate the relevance of a report generation function by predicting treatment response
-    using MedGemma and comparing to ground truth.
+    Evaluate the relevance of a function designed to extract prognostic information from 
+    various feature-specific reports (e.g. histopathological immune infiltration, or
+    the spatial heterogeneity of TP53) into a unified patient-level report. The 
+    evaluation is based on the ability of MedGemma to predict long vs short patient 
+    survival from the unified report.
     
     Args:
         tool1_name (str): The name of the first sub report to be generated per patient
@@ -52,15 +58,16 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
 
 {tool2_fn(patient_name)}
 
-Based on the above patient report, determine the survival prediction for this patient.
+Based on the above patient report, predict whether this patient will have a long or 
+short survival time.
 
 Provide your answer in JSON format with two fields:
-- "prediction": either "good survival" or "bad survival"
+- "prediction": either "long survival" or "short survival"
 - "reasoning": a brief explanation (keep it short, max 2-3 sentences)
 
 ```json
 {{
-  "prediction": "good survival or bad survival",
+  "prediction": "long survival or short survival",
   "reasoning": "brief explanation"
 }}
 ```
@@ -93,9 +100,9 @@ Provide your answer in JSON format with two fields:
                         prediction_field = parsed_response.get('prediction', '').lower()
                         reasoning = parsed_response.get('reasoning', '')
                         
-                        if 'good survival' in prediction_field:
+                        if 'long survival' in prediction_field:
                             prediction = 1
-                        elif 'bad survival' in prediction_field:
+                        elif 'short survival' in prediction_field:
                             prediction = 0
                         else:
                             raise ValueError(f"Invalid prediction value: {prediction_field}")
@@ -112,9 +119,9 @@ Provide your answer in JSON format with two fields:
                         answer_content = prediction_text.strip().lower()
                     
                     # Parse the response
-                    if 'good survival' in answer_content:
+                    if 'long survival' in answer_content:
                         prediction = 1
-                    elif 'bad survival' in answer_content:
+                    elif 'short survival' in answer_content:
                         prediction = 0
                     else:
                         # Fallback: try to find any indication of response
@@ -222,7 +229,7 @@ Provide your answer in JSON format with two fields:
     if tp_examples:
         patient, result = random.choice(tp_examples)
         result_summary += f"\nTrue Positive Example:"
-        result_summary += f"\n  Predicted: Good Survival, Actual: Good Survival ✓"
+        result_summary += f"\n  Predicted: long survival, Actual: long survival ✓"
         result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
     else:
         result_summary += "\nTrue Positive Example: No patients in this category\n"
@@ -230,7 +237,7 @@ Provide your answer in JSON format with two fields:
     if fp_examples:
         patient, result = random.choice(fp_examples)
         result_summary += f"\nFalse Positive Example:"
-        result_summary += f"\n  Predicted: Good Survival, Actual: Bad Survival ✗"
+        result_summary += f"\n  Predicted: long survival, Actual: short survival ✗"
         result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
     else:
         result_summary += "\nFalse Positive Example: No patients in this category\n"
@@ -238,7 +245,7 @@ Provide your answer in JSON format with two fields:
     if tn_examples:
         patient, result = random.choice(tn_examples)
         result_summary += f"\nTrue Negative Example:"
-        result_summary += f"\n  Predicted: Bad Survival, Actual: Bad Survival ✓"
+        result_summary += f"\n  Predicted: short survival, Actual: short survival ✓"
         result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
     else:
         result_summary += "\nTrue Negative Example: No patients in this category\n"
@@ -246,7 +253,7 @@ Provide your answer in JSON format with two fields:
     if fn_examples:
         patient, result = random.choice(fn_examples)
         result_summary += f"\nFalse Negative Example:"
-        result_summary += f"\n  Predicted: Bad Survival, Actual: Good Survival ✗"
+        result_summary += f"\n  Predicted: short survival, Actual: long survival ✗"
         result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
     else:
         result_summary += "\nFalse Negative Example: No patients in this category\n"

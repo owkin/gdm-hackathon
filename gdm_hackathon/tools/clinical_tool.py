@@ -39,9 +39,9 @@ def load_clinical_report(patient_id: str) -> str:
     """
     Load clinical report data from Google Storage bucket for a specific patient.
     
-    This report contains clinical information including patient demographics, medical history,
-    and treatment details. The clinical data includes sex, smoking status, histological subtype,
-    cancer stage, drug treatments, and radiotherapy information.
+    This report consolidates key clinical and treatment data for the patient, including 
+    age, smoking status, histological subtype, cancer stage, current medications, and 
+    radiotherapy history.
     
     Args:
         patient_id: The unique identifier for the patient (e.g., 'test_patient')
