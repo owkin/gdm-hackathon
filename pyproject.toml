@@ -7,7 +7,7 @@ name = "gdm_hackathon"
 version = "0.1.0"
 description = "Biomarker discovery using genetic algorithm and Vertex AI"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "GDM Hackathon Team"}
@@ -55,6 +55,20 @@ image = [
     "pillow>=8.3.0",
     "opencv-python>=4.5.0",
 ]
+data_prep = [
+    "owkin-engine-features[prior_knowledge,survival,dea,transforms,optim,spt,sc]>=0.5.0",
+    "owkin-data-loader>=0.1.15",
+]
+
+[[tool.uv.index]]
+name = "codeartifact"
+url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/"
+explicit = false
+
+[tool.uv.sources]
+owkin-data-loader = { index = "codeartifact" }
+owkin-engine-features = { index= "codeartifact" }
+
 
 [project.scripts]
 gdm-evolve = "evolve:main"
