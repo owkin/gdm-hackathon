@@ -17,7 +17,7 @@ from gdm_hackathon.config import GCP_PROJECT_ID
 @lru_cache(maxsize=1)
 def _get_gcs_fs():
     # Initialize GCS filesystem
-    return gcsfs.GCSFileSystem(project=GCP_PROJECT_ID, token="/home/sagemaker-user/.config/gcloud/legacy_credentials/devstar7031@gcplab.me/adc.json")
+    return gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
 
 
 def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
