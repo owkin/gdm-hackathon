@@ -53,15 +53,18 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
     immune cells (plasmocytes, neutrophils, eosinophils, lymphocytes).
 
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'TCGA-2F-A9KO-01Z-00-DX1')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
 
     Returns:
         The content of the immune infiltration report as a string
 
     Example:
-        >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
+        >>> get_hipe_report("test_patient")
         "Patient shows signs of..."
     """
+    if patient_id == "test_patient":
+        patient_id = "MW_B_007"
+
     fs = _get_gcs_fs()
 
     try:
@@ -86,15 +89,19 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
     Load a histopathological report assessing the organization of the tumor-stroma compartments.
 
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'TCGA-2F-A9KO-01Z-00-DX1')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
 
     Returns:
         The content of the tumor-stroma compartment report as a string
 
     Example:
-        >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
+        >>> load_hipe_report("test_patient")
         "Patient shows signs of..."
     """
+
+    if patient_id == "test_patient":
+        patient_id = "MW_B_007"
+
     fs = _get_gcs_fs()
 
     try:
@@ -115,7 +122,7 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
 
 # %%
 if __name__ == "__main__":
-    print(load_histopathological_immune_infiltration_report("MW_B_007"))
-    print(load_histopathological_tumor_stroma_compartments_report("MW_B_007"))
+    print(load_histopathological_immune_infiltration_report("test_patient"))
+    print(load_histopathological_tumor_stroma_compartments_report("test_patient"))
 
 # %%

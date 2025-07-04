@@ -1,12 +1,16 @@
 import importlib
 import json
+import gcsfs
 from smolagents import tool
 from gdm_hackathon.models.medgemma_query import get_survival_prediction_batch
 import re
 
-from gdm_hackathon.models.vertex_models import MODELS_DICT, LOCATION
-from gdm_hackathon.poc.report_functions import CACHE_FOLDER
+from gdm_hackathon.config import GCP_PROJECT_ID
 
+SYSTEM_INSTRUCTION = (
+    "You are a medical treatment specialist. Based on the following report, "
+    "provide clear and concise survival prediction. The population is bladder cancer patients."
+)
 
 @tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
@@ -23,20 +27,19 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     """
     
     # Load ground truth data
-    with open(CACHE_FOLDER / 'response_to_treatment.json', 'r') as f:
+    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+    bucket_name = "gdm-hackathon"
+    ground_truth_path = f"gs://{bucket_name}/data/binary_os_mw_bladder.json"
+    with fs.open(ground_truth_path, 'r') as f:
         ground_truth = json.load(f)
-    
-    # MedGemma endpoint configuration
-    ENDPOINT_ID = MODELS_DICT["medgemma-27b"]['endpoint_id']
-    
     
     correct_predictions = 0
     total_predictions = 0
     results = {}
     
     # import the tools function from the report_functions.py file using their names
-    tool1_fn = getattr(importlib.import_module("gdm_hackathon.poc.report_functions"), tool1_name)
-    tool2_fn = getattr(importlib.import_module("gdm_hackathon.poc.report_functions"), tool2_name)
+    tool1_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool1_name)
+    tool2_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool2_name)
 
     # Generate reports for all patients
     patient_reports = []
@@ -49,15 +52,15 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
 
 {tool2_fn(patient_name)}
 
-Based on the above patient report, determine if this patient was a good responder or bad responder to treatment.
+Based on the above patient report, determine the survival prediction for this patient.
 
 Provide your answer in JSON format with two fields:
-- "prediction": either "good responder" or "bad responder"
+- "prediction": either "good survival" or "bad survival"
 - "reasoning": a brief explanation (keep it short, max 2-3 sentences)
 
 ```json
 {{
-  "prediction": "good responder or bad responder",
+  "prediction": "good survival or bad survival",
   "reasoning": "brief explanation"
 }}
 ```
@@ -69,8 +72,7 @@ Provide your answer in JSON format with two fields:
     try:
         batch_predictions = get_survival_prediction_batch(
             medical_reports=patient_reports,
-            endpoint_id=ENDPOINT_ID,
-            endpoint_region=LOCATION,
+            system_instruction=SYSTEM_INSTRUCTION,
             max_tokens=2_000,
             temperature=0.0,
         )
@@ -91,9 +93,9 @@ Provide your answer in JSON format with two fields:
                         prediction_field = parsed_response.get('prediction', '').lower()
                         reasoning = parsed_response.get('reasoning', '')
                         
-                        if 'good responder' in prediction_field:
+                        if 'good survival' in prediction_field:
                             prediction = 1
-                        elif 'bad responder' in prediction_field:
+                        elif 'bad survival' in prediction_field:
                             prediction = 0
                         else:
                             raise ValueError(f"Invalid prediction value: {prediction_field}")
@@ -110,15 +112,15 @@ Provide your answer in JSON format with two fields:
                         answer_content = prediction_text.strip().lower()
                     
                     # Parse the response
-                    if 'good responder' in answer_content:
+                    if 'good survival' in answer_content:
                         prediction = 1
-                    elif 'bad responder' in answer_content:
+                    elif 'bad survival' in answer_content:
                         prediction = 0
                     else:
                         # Fallback: try to find any indication of response
-                        if any(word in answer_content for word in ['good', 'positive', 'respond', 'success']):
+                        if any(word in answer_content for word in ['good', 'positive', 'survival', 'success']):
                             prediction = 1
-                        elif any(word in answer_content for word in ['bad', 'negative', 'fail', 'poor']):
+                        elif any(word in answer_content for word in ['bad', 'negative', 'fail', 'poor', 'death']):
                             prediction = 0
                         else:
                             raise ValueError(f"Could not parse response: {answer_content}")
@@ -157,8 +159,41 @@ Provide your answer in JSON format with two fields:
             }
             total_predictions += 1
     
-    # Calculate accuracy
+    # Calculate confusion matrix statistics
+    true_positives = 0
+    false_positives = 0
+    true_negatives = 0
+    false_negatives = 0
+    
+    # Store examples for each category
+    tp_examples = []
+    fp_examples = []
+    tn_examples = []
+    fn_examples = []
+    
+    for patient, result in results.items():
+        if 'error' not in result:
+            prediction = result['prediction']
+            ground_truth = result['ground_truth']
+            
+            if prediction == 1 and ground_truth == 1:
+                true_positives += 1
+                tp_examples.append((patient, result))
+            elif prediction == 1 and ground_truth == 0:
+                false_positives += 1
+                fp_examples.append((patient, result))
+            elif prediction == 0 and ground_truth == 0:
+                true_negatives += 1
+                tn_examples.append((patient, result))
+            elif prediction == 0 and ground_truth == 1:
+                false_negatives += 1
+                fn_examples.append((patient, result))
+    
+    # Calculate metrics
     accuracy = (correct_predictions / total_predictions) * 100 if total_predictions > 0 else 0
+    precision = (true_positives / (true_positives + false_positives)) * 100 if (true_positives + false_positives) > 0 else 0
+    recall = (true_positives / (true_positives + false_negatives)) * 100 if (true_positives + false_negatives) > 0 else 0
+    specificity = (true_negatives / (true_negatives + false_positives)) * 100 if (true_negatives + false_positives) > 0 else 0
     
     # Format results
     result_summary = f"""
@@ -167,13 +202,53 @@ Provide your answer in JSON format with two fields:
     - Correct predictions: {correct_predictions}
     - Accuracy: {accuracy:.2f}%
     
-    Detailed Results:
+    Confusion Matrix Statistics:
+    - True Positives (TP): {true_positives}
+    - False Positives (FP): {false_positives}
+    - True Negatives (TN): {true_negatives}
+    - False Negatives (FN): {false_negatives}
+    
+    Performance Metrics:
+    - Precision: {precision:.2f}%
+    - Recall (Sensitivity): {recall:.2f}%
+    - Specificity: {specificity:.2f}%
+    
+    Example Cases with associated reasoning:
     """
     
-    for patient, result in results.items():
-        if 'error' in result:
-            result_summary += f"\n{patient}: Error - {result['error']}"
-        else:
-            result_summary += f"\n{patient}: Predicted {result['prediction']}, Actual {result['ground_truth']}, {'✓' if result['correct'] else '✗'}"
+    import random
+    
+    # Show random example from each category if available
+    if tp_examples:
+        patient, result = random.choice(tp_examples)
+        result_summary += f"\nTrue Positive Example:"
+        result_summary += f"\n  Predicted: Good Survival, Actual: Good Survival ✓"
+        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+    else:
+        result_summary += "\nTrue Positive Example: No patients in this category\n"
+    
+    if fp_examples:
+        patient, result = random.choice(fp_examples)
+        result_summary += f"\nFalse Positive Example:"
+        result_summary += f"\n  Predicted: Good Survival, Actual: Bad Survival ✗"
+        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+    else:
+        result_summary += "\nFalse Positive Example: No patients in this category\n"
+    
+    if tn_examples:
+        patient, result = random.choice(tn_examples)
+        result_summary += f"\nTrue Negative Example:"
+        result_summary += f"\n  Predicted: Bad Survival, Actual: Bad Survival ✓"
+        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+    else:
+        result_summary += "\nTrue Negative Example: No patients in this category\n"
+    
+    if fn_examples:
+        patient, result = random.choice(fn_examples)
+        result_summary += f"\nFalse Negative Example:"
+        result_summary += f"\n  Predicted: Bad Survival, Actual: Good Survival ✗"
+        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+    else:
+        result_summary += "\nFalse Negative Example: No patients in this category\n"
     
     return result_summary 

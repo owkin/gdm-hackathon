@@ -11,6 +11,7 @@ import gcsfs
 import json
 from smolagents import tool
 from gdm_hackathon.config import GCP_PROJECT_ID
+from gdm_hackathon.utils import convert_to_mw_id
 
 
 @tool
@@ -23,13 +24,13 @@ def load_b_cell_heatmap_report(patient_id: str) -> str:
     crucial role in antibody production and immune memory.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the B cell heatmap report as a string
         
     Example:
-        >>> load_b_cell_heatmap_report("CH_B_041")
+        >>> load_b_cell_heatmap_report("test_patient")
         "B cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "B_cell")
@@ -45,13 +46,13 @@ def load_cdk12_heatmap_report(patient_id: str) -> str:
     High expression may indicate active transcription processes or DNA repair mechanisms.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the CDK12 heatmap report as a string
         
     Example:
-        >>> load_cdk12_heatmap_report("CH_B_041")
+        >>> load_cdk12_heatmap_report("test_patient")
         "CDK12 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "CDK12")
@@ -67,13 +68,13 @@ def load_dc_heatmap_report(patient_id: str) -> str:
     Their distribution patterns can indicate immune activation and antigen processing sites.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the dendritic cell heatmap report as a string
         
     Example:
-        >>> load_dc_heatmap_report("CH_B_041")
+        >>> load_dc_heatmap_report("test_patient")
         "Dendritic cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "DC")
@@ -90,13 +91,13 @@ def load_egfr_heatmap_report(patient_id: str) -> str:
     associated with various cancers and can indicate aggressive tumor behavior.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the EGFR heatmap report as a string
         
     Example:
-        >>> load_egfr_heatmap_report("CH_B_041")
+        >>> load_egfr_heatmap_report("test_patient")
         "EGFR expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "EGFR")
@@ -113,13 +114,13 @@ def load_erbb2_heatmap_report(patient_id: str) -> str:
     predictive markers in several cancer types.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the ERBB2 heatmap report as a string
         
     Example:
-        >>> load_erbb2_heatmap_report("CH_B_041")
+        >>> load_erbb2_heatmap_report("test_patient")
         "ERBB2 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "ERBB2")
@@ -136,13 +137,13 @@ def load_endothelial_heatmap_report(patient_id: str) -> str:
     vascular density and potential areas of active angiogenesis.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the endothelial cell heatmap report as a string
         
     Example:
-        >>> load_endothelial_heatmap_report("CH_B_041")
+        >>> load_endothelial_heatmap_report("test_patient")
         "Endothelial cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Endothelial")
@@ -159,13 +160,13 @@ def load_epithelial_heatmap_report(patient_id: str) -> str:
     epithelial-mesenchymal transition or tumor formation.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the epithelial cell heatmap report as a string
         
     Example:
-        >>> load_epithelial_heatmap_report("CH_B_041")
+        >>> load_epithelial_heatmap_report("test_patient")
         "Epithelial cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Epithelial")
@@ -182,13 +183,13 @@ def load_fgfr3_heatmap_report(patient_id: str) -> str:
     various cancers including bladder cancer.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the FGFR3 heatmap report as a string
         
     Example:
-        >>> load_fgfr3_heatmap_report("CH_B_041")
+        >>> load_fgfr3_heatmap_report("test_patient")
         "FGFR3 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "FGFR3")
@@ -205,13 +206,13 @@ def load_fibroblast_heatmap_report(patient_id: str) -> str:
     functions. Their distribution can indicate areas of tissue remodeling and fibrosis.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the fibroblast heatmap report as a string
         
     Example:
-        >>> load_fibroblast_heatmap_report("CH_B_041")
+        >>> load_fibroblast_heatmap_report("test_patient")
         "Fibroblast distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Fibroblast")
@@ -228,13 +229,13 @@ def load_granulocyte_heatmap_report(patient_id: str) -> str:
     areas of inflammation, infection, or immune activation.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the granulocyte heatmap report as a string
         
     Example:
-        >>> load_granulocyte_heatmap_report("CH_B_041")
+        >>> load_granulocyte_heatmap_report("test_patient")
         "Granulocyte distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Granulocyte")
@@ -251,13 +252,13 @@ def load_il1b_heatmap_report(patient_id: str) -> str:
     inflammatory processes or immune activation.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the IL1B heatmap report as a string
         
     Example:
-        >>> load_il1b_heatmap_report("CH_B_041")
+        >>> load_il1b_heatmap_report("test_patient")
         "IL1B expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "IL1B")
@@ -274,13 +275,13 @@ def load_krt7_heatmap_report(patient_id: str) -> str:
     can help identify epithelial cell types and their distribution.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the KRT7 heatmap report as a string
         
     Example:
-        >>> load_krt7_heatmap_report("CH_B_041")
+        >>> load_krt7_heatmap_report("test_patient")
         "KRT7 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "KRT7")
@@ -297,13 +298,13 @@ def load_malignant_bladder_heatmap_report(patient_id: str) -> str:
     invasion patterns, and potential areas of aggressive growth.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the malignant bladder cell heatmap report as a string
         
     Example:
-        >>> load_malignant_bladder_heatmap_report("CH_B_041")
+        >>> load_malignant_bladder_heatmap_report("test_patient")
         "Malignant bladder cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Malignant_bladder")
@@ -320,13 +321,13 @@ def load_mast_heatmap_report(patient_id: str) -> str:
     local immune responses and tissue remodeling.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the mast cell heatmap report as a string
         
     Example:
-        >>> load_mast_heatmap_report("CH_B_041")
+        >>> load_mast_heatmap_report("test_patient")
         "Mast cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Mast")
@@ -343,13 +344,13 @@ def load_momac_heatmap_report(patient_id: str) -> str:
     distribution can indicate areas of immune surveillance and tissue remodeling.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the monocyte/macrophage heatmap report as a string
         
     Example:
-        >>> load_momac_heatmap_report("CH_B_041")
+        >>> load_momac_heatmap_report("test_patient")
         "Monocyte/macrophage distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "MoMac")
@@ -366,13 +367,13 @@ def load_muscle_heatmap_report(patient_id: str) -> str:
     tissue architecture and potential areas of muscle layer involvement in disease.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the muscle cell heatmap report as a string
         
     Example:
-        >>> load_muscle_heatmap_report("CH_B_041")
+        >>> load_muscle_heatmap_report("test_patient")
         "Muscle cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Muscle")
@@ -389,13 +390,13 @@ def load_other_heatmap_report(patient_id: str) -> str:
     fit into the main classification categories.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the other cell types heatmap report as a string
         
     Example:
-        >>> load_other_heatmap_report("CH_B_041")
+        >>> load_other_heatmap_report("test_patient")
         "Other cell types distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Other")
@@ -413,13 +414,13 @@ def load_pik3ca_heatmap_report(patient_id: str) -> str:
     proliferation pathways.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the PIK3CA heatmap report as a string
         
     Example:
-        >>> load_pik3ca_heatmap_report("CH_B_041")
+        >>> load_pik3ca_heatmap_report("test_patient")
         "PIK3CA expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "PIK3CA")
@@ -437,13 +438,13 @@ def load_plasma_heatmap_report(patient_id: str) -> str:
     responses to disease.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the plasma cell heatmap report as a string
         
     Example:
-        >>> load_plasma_heatmap_report("CH_B_041")
+        >>> load_plasma_heatmap_report("test_patient")
         "Plasma cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "Plasma")
@@ -460,13 +461,13 @@ def load_rb1_heatmap_report(patient_id: str) -> str:
     uncontrolled cell proliferation and is associated with various cancers.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the RB1 heatmap report as a string
         
     Example:
-        >>> load_rb1_heatmap_report("CH_B_041")
+        >>> load_rb1_heatmap_report("test_patient")
         "RB1 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "RB1")
@@ -483,13 +484,13 @@ def load_s100a8_heatmap_report(patient_id: str) -> str:
     inflammatory processes, neutrophil activation, or tissue damage responses.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the S100A8 heatmap report as a string
         
     Example:
-        >>> load_s100a8_heatmap_report("CH_B_041")
+        >>> load_s100a8_heatmap_report("test_patient")
         "S100A8 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "S100A8")
@@ -507,13 +508,13 @@ def load_tp53_heatmap_report(patient_id: str) -> str:
     suppression mechanisms.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the TP53 heatmap report as a string
         
     Example:
-        >>> load_tp53_heatmap_report("CH_B_041")
+        >>> load_tp53_heatmap_report("test_patient")
         "TP53 expression analysis shows..."
     """
     return _load_heatmap_description(patient_id, "TP53")
@@ -530,13 +531,13 @@ def load_t_nk_heatmap_report(patient_id: str) -> str:
     immunity while NK cells provide rapid responses to infected or transformed cells.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'CH_B_041')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the T cell and NK cell heatmap report as a string
         
     Example:
-        >>> load_t_nk_heatmap_report("CH_B_041")
+        >>> load_t_nk_heatmap_report("test_patient")
         "T cell and NK cell distribution analysis shows..."
     """
     return _load_heatmap_description(patient_id, "T_NK")
@@ -553,6 +554,11 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
     Returns:
         The content of the heatmap report as a string
     """
+    if patient_id == "test_patient":
+        patient_id = "CH_B_030"
+    else:
+        patient_id = convert_to_mw_id(patient_id)
+    
     try:
         # Initialize GCS filesystem
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -581,6 +587,6 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
 # %%
 if __name__ == "__main__":
     # Test one of the tools
-    print(load_tp53_heatmap_report("CH_B_030"))
+    print(load_tp53_heatmap_report("test_patient"))
 
 # %%
