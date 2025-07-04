@@ -7,6 +7,7 @@ from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zer
 from gdm_hackathon.tools.hipe_report.hipe_tool import (
 load_histopathological_immune_infiltration_report,
 load_histopathological_tumor_stroma_compartments_report,
+load_histopathological_tumor_nuclear_morphometry_report,
 )
 results = evaluate_report_relevance_in_zero_shot('load_histopathological_immune_infiltration_report', 'load_histopathological_tumor_stroma_compartments_report')
 from gdm_hackathon.tools import (
@@ -73,6 +74,7 @@ load_tp53_heatmap_report,
 load_t_nk_heatmap_report,
 load_histopathological_immune_infiltration_report, # histopathological report family
 load_histopathological_tumor_stroma_compartments_report,
+load_histopathological_tumor_nuclear_morphometry_report,
 final_answer_tool,],
     max_steps=10,
 )

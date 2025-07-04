@@ -31,4 +31,5 @@ load_t_nk_heatmap_report,
 from gdm_hackathon.tools.hipe_report.hipe_tool import (
 load_histopathological_immune_infiltration_report,
 load_histopathological_tumor_stroma_compartments_report,
+load_histopathological_tumor_nuclear_morphometry_report,
 )
