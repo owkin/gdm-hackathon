@@ -42,7 +42,7 @@ def add_to_cache(result_summary: str, tool1_name: str, tool2_name: str, accuracy
     with open(CACHE_DIR / "evaluation_results.json", "w") as f:
         json.dump(cache_data, f)
 
-def read_from_cache(tool1_name: str, tool2_name: str) -> float, str:
+def read_from_cache(tool1_name: str, tool2_name: str) -> dict | None:
     """
     Check if the result is already in the cache file.
     """
@@ -50,10 +50,10 @@ def read_from_cache(tool1_name: str, tool2_name: str) -> float, str:
         with open(CACHE_DIR / "evaluation_results.json", "r") as f:
             cache_data = json.load(f)  
             if f"{tool1_name}_{tool2_name}" in cache_data:
-                resuls = cache_data[f"{tool1_name}_{tool2_name}"]
-                return resuls["accuracy"], resuls["report"]
+                results = cache_data[f"{tool1_name}_{tool2_name}"]
+                return results
             else:
-                return None, None
+                return None
 
 @tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
@@ -72,9 +72,9 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
         str: Accuracy score and evaluation details
     """
     # check if the result is already in the cache
-    accuracy, report = read_from_cache(tool1_name, tool2_name)
-    if accuracy is not None:
-        return report
+    results = read_from_cache(tool1_name, tool2_name)
+    if results is not None:
+        return results["report"]
     
     # Load ground truth data
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
