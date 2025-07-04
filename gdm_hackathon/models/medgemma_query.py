@@ -13,6 +13,7 @@ from gdm_hackathon.config import ENDPOINT_MODELS_DICT, GCP_PROJECT_ID, GCP_LOCAT
 
 def get_survival_prediction_from_report_patient(
     medical_report: str,
+    system_instruction: str | None = None,
     max_tokens: int = 800,
     temperature: float = 0.0,
     use_dedicated_endpoint: bool = True,
@@ -61,7 +62,8 @@ def get_survival_prediction_from_report_patient(
         )
     
     # Survival prediction-focused system instruction
-    system_instruction = (
+    if system_instruction is None:
+        system_instruction = (
         "You are a highly skilled biomedical researcher with extensive expertise in "
         "analyzing various types of medical data, including H&E stained images, bulk "
         "RNA sequencing, spatial transcriptomics, and comprehensive clinical and treatment "
