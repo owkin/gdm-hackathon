@@ -37,6 +37,7 @@ dependencies = [
     "gcsfs>=2023.0.0",
     "ipykernel>=6.29.5",
     "openai>=1.93.0",
+    "biopython>=1.85",
 ]
 
 [project.optional-dependencies]

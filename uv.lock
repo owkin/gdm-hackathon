@@ -392,6 +392,36 @@ dependencies = [
 sdist = { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/binpacking/1.5.2/binpacking-1.5.2.tar.gz", hash = "sha256:9e5254e388670401911c5b6684469ce978964dec12a986bb5d0d33d2b1488d17" }
 
 [[package]]
+name = "biopython"
+version = "1.85"
+source = { registry = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85.tar.gz", hash = "sha256:5dafab74059de4e78f49f6b5684eddae6e7ce46f09cfa059c1d1339e8b1ea0a6" }
+wheels = [
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:db8822adab0cd75a6e6ae845acf312addd8eab5f9b731c191454b961fc2c2cdc" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:8e2bbe58cc1a592b239ef6d68396745d3fbfaafc668ce38283871d8ff070dbab" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5916eb56df7ecd4a3babc07a48d4894c40cfb45dc18ccda1c148d0131017ce04" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b0cec8833bf3036049129944ee5382dd576dac9670c3814ff2314b52aa94f199" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-win32.whl", hash = "sha256:cf88a4c8d8af13138be115949639a5e4a201618185a72ff09adbe175b7946b28" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp311-cp311-win_amd64.whl", hash = "sha256:d3c99db65d57ae4fc5034e42ac6cd8ddce069e664903f04c8a4f684d7609d6fa" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:cc5b981b9e3060db7c355b6145dfe3ce0b6572e1601b31211f6d742b10543874" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6fe47d704c2d3afac99aeb461219ec5f00273120d2d99835dc0a9a617f520141" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e54e495239e623660ad367498c2f7a1a294b1997ba603f2ceafb36fd18f0eba6" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d024ad48997ad53d53a77da24b072aaba8a550bd816af8f2e7e606a9918a3b43" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-win32.whl", hash = "sha256:6985e17a2911defcbd30275a12f5ed5de2765e4bc91a60439740d572fdbfdf43" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp312-cp312-win_amd64.whl", hash = "sha256:d6f8efb2db03f2ec115c5e8c764dbadf635e0c9ecd4c0e91fc8216c1b62f85f5" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:bae6f17262f20e9587d419ba5683e9dc93a31ee1858b98fa0cff203694d5b786" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:b1e4918e6399ab0183dd863527fec18b53b7c61b6f0ef95db84b4adfa430ce75" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:86e487b6fe0f20a2b0138cb53f3d4dc26a7e4060ac4cb6fb1d19e194d445ef46" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:327184048b5a50634ae0970119bcb8a35b76d7cefb2658a01f772915f2fb7686" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:66b08905fb1b3f5194f908aaf04bbad474c4e3eaebad6d9f889a04e64dd1faf4" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-win32.whl", hash = "sha256:5a236ab1e2797c7dcf1577d80fdaafabead2908bc338eaed0aa1509dab769fef" },
+    { url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/biopython/1.85/biopython-1.85-cp313-cp313-win_amd64.whl", hash = "sha256:1b61593765e9ebdb71d73307d55fd4b46eb976608d329ae6803c084d90ed34c7" },
+]
+
+[[package]]
 name = "bioservices"
 version = "1.12.1"
 source = { registry = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple" }
@@ -1454,6 +1484,7 @@ name = "gdm-hackathon"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "biopython" },
     { name = "gcsfs" },
     { name = "google-cloud-aiplatform" },
     { name = "ipykernel" },
@@ -1489,6 +1520,7 @@ viz = [
 
 [package.metadata]
 requires-dist = [
+    { name = "biopython", specifier = ">=1.85" },
     { name = "black", marker = "extra == 'dev'", specifier = ">=22.0.0" },
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "gcsfs", specifier = ">=2023.0.0" },
