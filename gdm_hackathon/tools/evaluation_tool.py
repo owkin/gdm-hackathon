@@ -4,10 +4,8 @@ import gcsfs
 from smolagents import tool
 from gdm_hackathon.models.medgemma_query import get_survival_prediction_from_report_patient
 import re
-import pandas as pd
-import requests
-from gdm_hackathon.config import GCP_PROJECT_ID, ENDPOINT_MODELS_DICT
-from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url
+from gdm_hackathon.config import GCP_PROJECT_ID
+from pathlib import Path
 
 SYSTEM_INSTRUCTION = (
     "You are a highly skilled biomedical researcher with extensive expertise in "
@@ -16,6 +14,46 @@ SYSTEM_INSTRUCTION = (
     "records. Your primary task is to predict patient survival based on provided "
     "medical reports."
 )
+
+CACHE_DIR = Path(__file__).parent.parent.parent / "cache"
+if not CACHE_DIR.exists():
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def add_to_cache(result_summary: str, tool1_name: str, tool2_name: str, accuracy: float, precision: float, recall: float, specificity: float):
+    """
+    Add the result summary to the cache file.
+    """
+    # if the cache file already exists, load it
+    if (CACHE_DIR / "evaluation_results.json").exists():
+        with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+            cache_data = json.load(f)
+    else:
+        cache_data = {}
+        
+    cache_data[f"{tool1_name}_{tool2_name}"] = {
+        "tool1_name": tool1_name,
+        "tool2_name": tool2_name,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,   
+        "specificity": specificity,
+        "report": result_summary,
+    }
+    with open(CACHE_DIR / "evaluation_results.json", "w") as f:
+        json.dump(cache_data, f)
+
+def read_from_cache(tool1_name: str, tool2_name: str) -> float, str:
+    """
+    Check if the result is already in the cache file.
+    """
+    if (CACHE_DIR / "evaluation_results.json").exists():
+        with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+            cache_data = json.load(f)  
+            if f"{tool1_name}_{tool2_name}" in cache_data:
+                resuls = cache_data[f"{tool1_name}_{tool2_name}"]
+                return resuls["accuracy"], resuls["report"]
+            else:
+                return None, None
 
 @tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
@@ -33,6 +71,10 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     Returns:
         str: Accuracy score and evaluation details
     """
+    # check if the result is already in the cache
+    accuracy, report = read_from_cache(tool1_name, tool2_name)
+    if accuracy is not None:
+        return report
     
     # Load ground truth data
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -215,4 +257,9 @@ Provide your answer in JSON format with two fields for each patient:
     else:
         result_summary += "\nFalse Negative Example: No patients in this category\n"
     
+    # cache the result in a json file
+    add_to_cache(result_summary, tool1_name, tool2_name, accuracy, precision, recall, specificity)
+
+
+
     return result_summary 
