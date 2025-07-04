@@ -23,13 +23,13 @@ def load_snv_indel_genomic_report(patient_id: str) -> str:
     and can have significant implications for disease development, progression, and treatment response.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'MW_B_001a')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the SNV/INDEL genomic report as a string
         
     Example:
-        >>> load_snv_indel_genomic_report("MW_B_001a")
+        >>> load_snv_indel_genomic_report("test_patient")
         "SNV/INDEL analysis shows..."
     """
     return _load_genomic_description(patient_id, "snv_indel")
@@ -46,13 +46,13 @@ def load_cnv_genomic_report(patient_id: str) -> str:
     and are important in cancer development and progression.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'MW_B_001a')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the CNV genomic report as a string
         
     Example:
-        >>> load_cnv_genomic_report("MW_B_001a")
+        >>> load_cnv_genomic_report("test_patient")
         "CNV analysis shows..."
     """
     return _load_genomic_description(patient_id, "cnv")
@@ -69,13 +69,13 @@ def load_cna_genomic_report(patient_id: str) -> str:
     prognosis, and response to targeted therapies.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'MW_B_001a')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the CNA genomic report as a string
         
     Example:
-        >>> load_cna_genomic_report("MW_B_001a")
+        >>> load_cna_genomic_report("test_patient")
         "CNA analysis shows..."
     """
     return _load_genomic_description(patient_id, "cna")
@@ -92,13 +92,13 @@ def load_gii_genomic_report(patient_id: str) -> str:
     genomic instability, which is a hallmark of cancer and can indicate aggressive disease.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'MW_B_001a')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the GII genomic report as a string
         
     Example:
-        >>> load_gii_genomic_report("MW_B_001a")
+        >>> load_gii_genomic_report("test_patient")
         "GII analysis shows..."
     """
     return _load_genomic_description(patient_id, "gii")
@@ -115,13 +115,13 @@ def load_tmb_genomic_report(patient_id: str) -> str:
     to immunotherapy, particularly immune checkpoint inhibitors.
     
     Args:
-        patient_id: The unique identifier for the patient (e.g., 'MW_B_001a')
+        patient_id: The unique identifier for the patient (e.g., 'test_patient')
         
     Returns:
         The content of the TMB genomic report as a string
         
     Example:
-        >>> load_tmb_genomic_report("MW_B_001a")
+        >>> load_tmb_genomic_report("test_patient")
         "TMB analysis shows..."
     """
     return _load_genomic_description(patient_id, "tmb")
@@ -138,6 +138,9 @@ def _load_genomic_description(patient_id: str, data_type: str) -> str:
     Returns:
         The content of the genomic report as a string
     """
+    if patient_id == "test_patient":
+        patient_id = "MW_B_001a"
+        
     try:
         # Initialize GCS filesystem
         fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -166,6 +169,6 @@ def _load_genomic_description(patient_id: str, data_type: str) -> str:
 # %%
 if __name__ == "__main__":
     # Test one of the tools
-    print(load_snv_indel_genomic_report("MW_B_001a"))
+    print(load_snv_indel_genomic_report("test_patient"))
 
 # %% 
