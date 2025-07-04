@@ -7,6 +7,10 @@ Test script for the Heatmap Report Generation Tool
 
 from gdm_hackathon.tools.genomic_report.genomic_tool import (
     load_snv_indel_genomic_report,
+    load_cnv_genomic_report,
+    load_cna_genomic_report,
+    load_gii_genomic_report,
+    load_tmb_genomic_report,
 )
 from gdm_hackathon.models.vertex_models import get_model
 from smolagents import CodeAgent
@@ -33,7 +37,7 @@ def test_with_vertex_ai_agent():
         # Create an agent with the HIPE report tool
         model = get_model("gemma-3-27b")
         agent = CodeAgent(
-            tools=[load_snv_indel_genomic_report],
+            tools=[load_snv_indel_genomic_report, load_cnv_genomic_report, load_cna_genomic_report, load_gii_genomic_report, load_tmb_genomic_report],
             model=model,
             name="genomic_report_agent"
         )
