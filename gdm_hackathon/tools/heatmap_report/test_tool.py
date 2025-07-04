@@ -19,8 +19,7 @@ def test_heatmap_report_tools():
     print("="*60)
     
     # Test TP53 heatmap report
-    patient_id = "CH_B_030"
-    feature = "TP53"
+    patient_id = "MW_B_001"
     result = load_tp53_heatmap_report(patient_id)
     print(result)
 
@@ -40,7 +39,7 @@ def test_with_vertex_ai_agent():
         )
 
         # Use the agent to load a report
-        result = agent.run("Describe the spatial distribution of TP53 gene expression levels for patient CH_B_030")
+        result = agent.run("Describe the spatial distribution of TP53 gene expression levels for patient MW_B_001")
         print(f"Vertex AI agent result: {result}")
         
     except Exception as e:
