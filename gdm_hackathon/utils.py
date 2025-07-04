@@ -1,7 +1,12 @@
 """Utility functions for the project."""
 
+from functools import lru_cache
+import gcsfs
+from gdm_hackathon.config import GCP_PROJECT_ID
+
+
 def convert_to_ch_id(patient_id: str) -> str:
-    """Convert the patient ID to the MW ID format."""
+    """Convert the patient ID to the CH ID format."""
     mapping = {
         "CH_B_030": "MW_B_001",
         "CH_B_033": "MW_B_002",
@@ -44,3 +49,8 @@ def convert_to_mw_id(patient_id: str) -> str:
     }
 
     return mapping[patient_id]
+
+@lru_cache(maxsize=1)
+def get_gcs_fs():
+    # Initialize GCS filesystem
+    return gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)

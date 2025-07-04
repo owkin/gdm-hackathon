@@ -6,22 +6,15 @@ This tool loads HIPE report data from Google Storage bucket using the @tool deco
 """
 # %%
 
-from functools import lru_cache
 from typing import Optional
-import gcsfs
 from smolagents import tool
 
-from gdm_hackathon.config import GCP_PROJECT_ID
+from gdm_hackathon.utils import get_gcs_fs
 
-
-@lru_cache(maxsize=1)
-def _get_gcs_fs():
-    # Initialize GCS filesystem
-    return gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
 
 
 def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
-    fs = _get_gcs_fs()
+    fs = get_gcs_fs()
     
     if patient_id == "test_patient":
         patient_id = "MW_B_007"
@@ -65,7 +58,7 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
         >>> load_histopathological_immune_infiltration_report("test_patient")
         "Patient shows signs of..."
     """
-    fs = _get_gcs_fs()
+    fs = get_gcs_fs()
 
     try:
         report_path = _find_report("hipe_reports_immune_mw", patient_id)
@@ -98,7 +91,7 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
         >>> load_histopathological_tumor_stroma_compartments_report("test_patient")
         "Patient shows signs of..."
     """
-    fs = _get_gcs_fs()
+    fs = get_gcs_fs()
 
     try:
         report_path = _find_report("hipe_reports_tumor_stroma_compartments_mw", patient_id)
@@ -131,7 +124,7 @@ def load_histopathological_tumor_nuclear_morphometry_report(patient_id: str) -> 
         >>> load_histopathological_tumor_nuclear_morphometry_report("test_patient")
         "Patient shows signs of..."
     """
-    fs = _get_gcs_fs()
+    fs = get_gcs_fs()
 
     try:
         report_path = _find_report("hipe_reports_nuclear_morphometry_mw", patient_id)

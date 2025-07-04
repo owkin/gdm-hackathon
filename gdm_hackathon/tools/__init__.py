@@ -54,3 +54,7 @@ from gdm_hackathon.tools.genomic_report.genomic_tool import (
     load_gii_genomic_report,
     load_tmb_genomic_report,
 )
+
+from gdm_hackathon.tools.clinical_tool import (
+    load_clinical_report
+)
