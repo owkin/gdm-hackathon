@@ -6,6 +6,7 @@ This tool loads HIPE report data from Google Storage bucket using the @tool deco
 """
 # %%
 
+from functools import lru_cache
 from typing import Optional
 import gcsfs
 from smolagents import tool
@@ -13,9 +14,14 @@ from smolagents import tool
 from gdm_hackathon.config import GCP_PROJECT_ID
 
 
-def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
+@lru_cache(maxsize=1)
+def _get_gcs_fs():
     # Initialize GCS filesystem
-    fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+    return gcsfs.GCSFileSystem(project=GCP_PROJECT_ID, token="/home/sagemaker-user/.config/gcloud/legacy_credentials/devstar7031@gcplab.me/adc.json")
+
+
+def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
+    fs = _get_gcs_fs()
 
     # Construct the path to the HIPE report in the bucket
     bucket_name = "gdm-hackathon"
@@ -56,6 +62,8 @@ def load_histopathological_immune_infiltration_report(patient_id: str) -> str:
         >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
         "Patient shows signs of..."
     """
+    fs = _get_gcs_fs()
+
     try:
         report_path = _find_report("hipe_reports_immune_mw", patient_id)
 
@@ -87,6 +95,8 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
         >>> load_hipe_report("TCGA-2F-A9KO-01Z-00-DX1")
         "Patient shows signs of..."
     """
+    fs = _get_gcs_fs()
+
     try:
         report_path = _find_report("hipe_reports_tumor_stroma_compartments_mw", patient_id)
 
