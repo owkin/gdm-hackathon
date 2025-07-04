@@ -107,21 +107,20 @@ def run_coding_agent():
 
     ## Your Task:
     1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="test_patient" to understand the type and quality of information provided.
-    2. **Select the most promising combination**: Select the 3 most promising combination of 2 tools for survival prediction. 
+    2. **Select the most promising combination**: Select the most promising combination of 2 tools for survival prediction. 
     3. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
-    4. **Iterate at most 3 times step 2 and 3**: Iterate step 2 and 3.
+    4. **Iterate step 2 and 3**: Iterate step 2 and 3 until you ran out of step budget.
     5. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
 
     ## Expected Output:
     Your response should include:1"
-    - Accuracy scores from evaluating all 3 combinations using evaluate_report_relevance_in_zero_shot
+    - Accuracy score of the best, your preferred combination, using evaluate_report_relevance_in_zero_shot
     - Clear recommendation of the best combination
     - Detailed explanation of why this combination is optimal for survival prediction
 
     ## Important Notes:
     - A "full report" consists of exactly 2 sub-reports combined
     - The goal is to maximize the accuracy of treatment response prediction
-    - Do not evaluate more than 3 combinaisons at one! It is important to evaluate the combinaisons in a systematic way.
     - Think of this optimization as a genetic algorithm, where you are trying to find the best combination of 2 tools for survival prediction.
     - The evaluation tool uses real patient data and MedGemma predictions, so the results are meaningful
 
