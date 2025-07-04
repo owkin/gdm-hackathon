@@ -14,7 +14,7 @@ import json
 import base64
 import requests
 from datetime import datetime
-from gdm_hackathon.config import GCP_PROJECT_ID,
+from gdm_hackathon.config import GCP_PROJECT_ID
 from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url, MODELS_DICT
 
 MODEL="gemma-3-27b"
@@ -180,131 +180,6 @@ def generate_heatmap_description(patient_id: str, feature: str, reference_featur
         return f"Error generating heatmap description for {patient_id}_{feature}: {str(e)}"
 
 
-def generate_all_heatmap_descriptions(patient_id: str | None = None, reference_features: list | None = None) -> str:
-    """
-    Generate heatmap descriptions for all available features for a specific patient or all patients.
-    
-    Args:
-        patient_id: The patient ID to process. If None, processes all available patients
-        reference_features: List of reference features to provide context
-                          Defaults to ['Malignant_bladder', 'Muscle'] if None
-        
-    Returns:
-        A summary of the batch processing results
-        
-    Example:
-        >>> generate_all_heatmap_descriptions("CH_B_041")
-        "Generated descriptions for 5 features for patient CH_B_041"
-        
-        >>> generate_all_heatmap_descriptions()
-        "Generated descriptions for 15 features across 3 patients"
-    """
-    try:
-        # Initialize GCS filesystem
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
-        bucket_name = "gdm-hackathon"
-        heatmap_path = f"{bucket_name}/data/heatmaps/"
-        
-        if not fs.exists(heatmap_path):
-            return f"Error: Heatmap directory not found at {heatmap_path}"
-        
-        # Set default reference features if none provided
-        if reference_features is None:
-            reference_features = ["Malignant_bladder", "Muscle"]
-        
-        # Get all available heatmap files
-        files = fs.ls(heatmap_path)
-        
-        if not files:
-            return "No heatmap images found in the bucket."
-        
-        # Parse files to extract patient/feature combinations
-        heatmap_info = []
-        for file_path in files:
-            filename = file_path.split('/')[-1]
-            if filename.endswith('_proportions.png'):
-                base_name = filename.replace('_proportions.png', '')
-                
-                # Patient ID pattern is CH_*_*** (e.g., CH_B_041, CH_B_073)
-                import re
-                patient_match = re.match(r'(CH_[A-Z]_\d+)', base_name)
-                
-                if patient_match:
-                    file_patient_id = patient_match.group(1)
-                    # Feature is everything after the patient ID
-                    feature = base_name[len(file_patient_id) + 1:]  # +1 for the underscore
-                    
-                    # Filter by patient_id if specified
-                    if patient_id is None or file_patient_id == patient_id:
-                        heatmap_info.append({
-                            "patient_id": file_patient_id,
-                            "feature": feature,
-                            "filename": filename
-                        })
-        
-        if not heatmap_info:
-            if patient_id:
-                return f"No valid heatmap images found for patient {patient_id}"
-            else:
-                return "No valid heatmap images found (expected format: patient_id_feature_proportions.png)"
-        
-        # Group by patient for better organization
-        patients = {}
-        for info in heatmap_info:
-            if info["patient_id"] not in patients:
-                patients[info["patient_id"]] = []
-            patients[info["patient_id"]].append(info["feature"])
-        
-        # Generate descriptions
-        successful = 0
-        failed = 0
-        results = []
-        
-        for patient, features in patients.items():
-            print(f"\nProcessing patient {patient} with {len(features)} features...")
-            
-            for feature in features:
-                print(f"  Processing {feature}...")
-                try:
-                    result = generate_heatmap_description(patient, feature, reference_features)
-                    
-                    if isinstance(result, str) and not result.startswith("Error"):
-                        successful += 1
-                        results.append(f"✓ {patient}_{feature}: Success")
-                    else:
-                        failed += 1
-                        error_msg = str(result)[:100] if len(str(result)) > 100 else str(result)
-                        results.append(f"✗ {patient}_{feature}: Failed - {error_msg}...")
-                        
-                except Exception as e:
-                    failed += 1
-                    results.append(f"✗ {patient}_{feature}: Exception - {str(e)}")
-        
-        # Create summary
-        total = successful + failed
-        summary = f"Batch processing complete:\n"
-        summary += f"✓ Successful: {successful}\n"
-        summary += f"✗ Failed: {failed}\n"
-        summary += f"Total processed: {total}\n\n"
-        
-        if patient_id:
-            summary += f"Processed {len(patients)} patient(s) with {total} features"
-        else:
-            summary += f"Processed {len(patients)} patients with {total} features total"
-        
-        # Add detailed results if there are failures
-        if failed > 0:
-            summary += f"\n\nFailed items:\n"
-            for result in results:
-                if result.startswith("✗"):
-                    summary += f"  {result}\n"
-        
-        return summary
-        
-    except Exception as e:
-        return f"Error in batch processing: {str(e)}"
-
-
 def list_patients_and_features() -> tuple[list[str], list[str]]:
     """
     List all available patients in the bucket.
@@ -372,6 +247,6 @@ if __name__ == "__main__":
     patient_ids, features = list_patients_and_features()
     for patient_id, feature in zip(patient_ids, features):
         print(f"Generating description for {patient_id} and {feature}")
-        generate_all_heatmap_descriptions(patient_id, [feature])
+        generate_heatmap_description(patient_id, feature)
 
 # %%
