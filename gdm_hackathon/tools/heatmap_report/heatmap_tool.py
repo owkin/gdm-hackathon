@@ -7,12 +7,10 @@ Each tool loads the corresponding heatmap description from Google Storage bucket
 """
 # %%
 
-import gcsfs
 import json
 from smolagents import tool
-from gdm_hackathon.config import GCP_PROJECT_ID
 from gdm_hackathon.utils import convert_to_mw_id
-
+from gdm_hackathon.utils import get_gcs_fs
 
 @tool
 def load_b_cell_heatmap_report(patient_id: str) -> str:
@@ -561,7 +559,7 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
     
     try:
         # Initialize GCS filesystem
-        fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
+        fs = get_gcs_fs()
         bucket_name = "gdm-hackathon"
         
         # Construct the path to the heatmap description
