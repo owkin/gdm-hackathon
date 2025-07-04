@@ -5,8 +5,12 @@ Test script for the Heatmap Report Generation Tool
 
 # %%
 
-from gdm_hackathon.tools.heatmap_report.heatmap_tool import (
-    load_tp53_heatmap_report,
+from gdm_hackathon.tools.genomic_report.genomic_tool import (
+    load_snv_indel_genomic_report,
+    load_cnv_genomic_report,
+    load_cna_genomic_report,
+    load_gii_genomic_report,
+    load_tmb_genomic_report,
 )
 from gdm_hackathon.models.vertex_models import get_model
 from smolagents import CodeAgent
@@ -19,8 +23,8 @@ def test_heatmap_report_tools():
     print("="*60)
     
     # Test TP53 heatmap report
-    patient_id = "MW_B_001"
-    result = load_tp53_heatmap_report(patient_id)
+    patient_id = "MW_B_001a"
+    result = load_snv_indel_genomic_report(patient_id)
     print(result)
 
 def test_with_vertex_ai_agent():
@@ -33,13 +37,13 @@ def test_with_vertex_ai_agent():
         # Create an agent with the HIPE report tool
         model = get_model("gemma-3-27b")
         agent = CodeAgent(
-            tools=[load_tp53_heatmap_report],
+            tools=[load_snv_indel_genomic_report, load_cnv_genomic_report, load_cna_genomic_report, load_gii_genomic_report, load_tmb_genomic_report],
             model=model,
-            name="heatmap_report_agent"
+            name="genomic_report_agent"
         )
 
         # Use the agent to load a report
-        result = agent.run("Describe the spatial distribution of TP53 gene expression levels for patient MW_B_001")
+        result = agent.run("Describe the genomic mutations of patient MW_B_001a")
         print(f"Vertex AI agent result: {result}")
         
     except Exception as e:

@@ -6,16 +6,13 @@ This module provides a simplified function to query the MedGemma 27B model
 for survival predictions based on medical reports.
 """
 
-import os
 from google.cloud import aiplatform
-from typing import Optional, List, Union
+from typing import List, Union
 
+from gdm_hackathon.config import ENDPOINT_MODELS_DICT, GCP_PROJECT_ID, GCP_LOCATION
 
 def get_survival_prediction_from_report_patient(
     medical_report: str,
-    endpoint_id: str,
-    endpoint_region: str,
-    project_id: Optional[str] = None,
     max_tokens: int = 800,
     temperature: float = 0.0,
     use_dedicated_endpoint: bool = True,
@@ -25,9 +22,6 @@ def get_survival_prediction_from_report_patient(
     
     Args:
         medical_report (str): The medical report text to analyze
-        endpoint_id (str): The Vertex AI endpoint ID
-        endpoint_region (str): The region where the endpoint is deployed
-        project_id (str, optional): Google Cloud project ID. If None, uses GOOGLE_CLOUD_PROJECT env var
         max_tokens (int): Maximum number of tokens to generate
         temperature (float): Sampling temperature (0.0 for deterministic)
         use_dedicated_endpoint (bool): Whether using a dedicated endpoint
@@ -44,26 +38,16 @@ def get_survival_prediction_from_report_patient(
     if not medical_report.strip():
         raise ValueError("Medical report cannot be empty")
     
-    if not endpoint_id:
-        raise ValueError("Endpoint ID is required")
-    
-    if not endpoint_region:
-        raise ValueError("Endpoint region is required")
-    
-    # Get project ID
-    if project_id is None:
-        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gemma-hcls25par-703")
-        if not project_id:
-            raise ValueError("Project ID must be provided or set in GOOGLE_CLOUD_PROJECT environment variable")
-    
+    endpoint_id = ENDPOINT_MODELS_DICT["medgemma-27b"]["endpoint_id"]
+
     # Initialize Vertex AI
-    aiplatform.init(project=project_id, location=endpoint_region)
+    aiplatform.init(project=GCP_PROJECT_ID, location=GCP_LOCATION)
     
     # Create endpoint object
     endpoint = aiplatform.Endpoint(
         endpoint_name=endpoint_id,
-        project=project_id,
-        location=endpoint_region,
+        project=GCP_PROJECT_ID,
+        location=GCP_LOCATION,
     )
     
     # Get endpoint name for validation
@@ -95,9 +79,7 @@ def get_survival_prediction_from_report_patient(
 
 def get_survival_prediction_batch(
     medical_reports: Union[str, List[str]],
-    endpoint_id: str,
-    endpoint_region: str,
-    project_id: Optional[str] = None,
+    system_instruction,
     max_tokens: int = 800,
     temperature: float = 0.0,
     use_dedicated_endpoint: bool = True,
@@ -110,9 +92,6 @@ def get_survival_prediction_batch(
     
     Args:
         medical_reports (Union[str, List[str]]): Single medical report or list of medical reports
-        endpoint_id (str): The Vertex AI endpoint ID
-        endpoint_region (str): The region where the endpoint is deployed
-        project_id (str, optional): Google Cloud project ID. If None, uses GOOGLE_CLOUD_PROJECT env var
         max_tokens (int): Maximum number of tokens to generate
         temperature (float): Sampling temperature (0.0 for deterministic)
         use_dedicated_endpoint (bool): Whether using a dedicated endpoint
@@ -130,9 +109,6 @@ def get_survival_prediction_batch(
     if isinstance(medical_reports, str):
         return get_survival_prediction_from_report_patient(
             medical_report=medical_reports,
-            endpoint_id=endpoint_id,
-            endpoint_region=endpoint_region,
-            project_id=project_id,
             max_tokens=max_tokens,
             temperature=temperature,
             use_dedicated_endpoint=use_dedicated_endpoint,
@@ -141,27 +117,15 @@ def get_survival_prediction_batch(
     # Validate inputs for batch processing
     if not medical_reports:
         raise ValueError("Medical reports list cannot be empty")
-    
-    if not endpoint_id:
-        raise ValueError("Endpoint ID is required")
-    
-    if not endpoint_region:
-        raise ValueError("Endpoint region is required")
-    
-    # Get project ID
-    if project_id is None:
-        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "gemma-hcls25par-703")
-        if not project_id:
-            raise ValueError("Project ID must be provided or set in GOOGLE_CLOUD_PROJECT environment variable")
-    
+
     # Initialize Vertex AI
-    aiplatform.init(project=project_id, location=endpoint_region)
+    aiplatform.init(project=GCP_PROJECT_ID, location=GCP_LOCATION)
     
     # Create endpoint object
     endpoint = aiplatform.Endpoint(
-        endpoint_name=endpoint_id,
-        project=project_id,
-        location=endpoint_region,
+        endpoint_name=ENDPOINT_MODELS_DICT["medgemma-27b"]["endpoint_id"],
+        project=GCP_PROJECT_ID,
+        location=GCP_LOCATION,
     )
     
     # Get endpoint name for validation
@@ -173,12 +137,6 @@ def get_survival_prediction_batch(
             "The examples are intended to be used with instruction-tuned variants. "
             "Please use an instruction-tuned model."
         )
-    
-    # Survival prediction-focused system instruction
-    system_instruction = (
-        "You are a medical treatment specialist. Based on the following report, "
-        "provide clear and concise survival prediction"
-    )
     
     # Process in batches
     all_predictions = []
@@ -311,26 +269,25 @@ if __name__ == "__main__":
         influence immune cell infiltration and function.
     """
     
-    # You would need to set these values
-    ENDPOINT_ID = "4761133837897957376"
-    ENDPOINT_REGION = "europe-west4"  # e.g., "us-central1"
+
     
     try:
         # Get survival prediction for single report
         prediction_response = get_survival_prediction_from_report_patient(
             medical_report=sample_report,
-            endpoint_id=ENDPOINT_ID,
-            endpoint_region=ENDPOINT_REGION
-        )
+            )
         print("Survival Prediction (Single):")
         print(prediction_response)
-        
+
+        system_instruction = (
+            "You are a medical treatment specialist. Based on the following report, "
+            "provide clear and concise survival prediction"
+        )
         # Get survival predictions for batch of reports
         sample_reports = [sample_report, sample_report, sample_report]  # Example with 3 identical reports
         batch_predictions = get_survival_prediction_batch(
             medical_reports=sample_reports,
-            endpoint_id=ENDPOINT_ID,
-            endpoint_region=ENDPOINT_REGION
+            system_instruction=system_instruction,
         )
         print("\nSurvival Predictions (Batch):")
         for i, prediction in enumerate(batch_predictions):
@@ -339,6 +296,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error: {e}")
         print("Please make sure to:")
-        print("1. Set your ENDPOINT_ID and ENDPOINT_REGION")
-        print("2. Have proper Google Cloud authentication set up")
-        print("3. Have the required dependencies installed") 
+        print("1. Have proper Google Cloud authentication set up")
+        print("2. Have the required dependencies installed") 
