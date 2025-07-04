@@ -91,8 +91,11 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     all_reports_t2 = {p_name: tool2_fn(p_name) for p_name in patient_names}
 
     # --- 2. Create Cohort Summaries ---
-    cohort_summary_t1 = get_cohort_summary(tool1_name, all_reports_t1, patient_names)
-    cohort_summary_t2 = get_cohort_summary(tool2_name, all_reports_t2, patient_names)
+    # cohort_summary_t1 = get_cohort_summary(tool1_name, all_reports_t1, patient_names)
+    # cohort_summary_t2 = get_cohort_summary(tool2_name, all_reports_t2, patient_names)
+
+    pretty_all_reports_t1 = "\n---\n".join([all_reports_t1[p] for p in patient_names])
+    pretty_all_reports_t2 = "\n---\n".join([all_reports_t2[p] for p in patient_names])
 
     # --- 3. Build Context-Aware Prompts for Each Patient ---
     patient_prompts = []
@@ -101,18 +104,18 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
 You are a biomedical researcher making a comparative survival prediction.
 
 ## Cohort-Level Context
-First, here are the summary characteristics for the entire patient cohort for the two features under consideration:
+First, here are the reports for the entire patient cohort for the two features under consideration:
 
-### Cohort Summary for Feature 1 ({tool1_name}):
-{cohort_summary_t1}
+### All Cohort reports for Feature 1 ({tool1_name}):
+{pretty_all_reports_t1}
 
-### Cohort Summary for Feature 2 ({tool2_name}):
-{cohort_summary_t2}
+### All Cohort reports for Feature 2 ({tool2_name}):
+{pretty_all_reports_t2}
 
 ---
 
 ## Individual Patient Analysis
-Now, analyze the following specific patient in the context of the cohort summaries above.
+Now, analyze the following specific patient in the context of the cohort above.
 
 ### Patient Report for: {patient_name}
 - **Feature 1 ({tool1_name})**: {all_reports_t1[patient_name]}
