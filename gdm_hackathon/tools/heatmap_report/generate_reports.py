@@ -245,8 +245,9 @@ if __name__ == "__main__":
 
 # %%
     patient_ids, features = list_patients_and_features()
-    for patient_id, feature in zip(patient_ids, features):
-        print(f"Generating description for {patient_id} and {feature}")
-        generate_heatmap_description(patient_id, feature)
+    for patient_id in patient_ids:
+        for feature in features:
+            print(f"Generating description for {patient_id} and {feature}")
+            generate_heatmap_description(patient_id, feature)
 
 # %%
