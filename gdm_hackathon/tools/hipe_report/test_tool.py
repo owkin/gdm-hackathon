@@ -41,10 +41,7 @@ def test_with_vertex_ai_agent():
     try:
         # Create an agent with the HIPE report tool
         model = VertexAIServerModel(
-            model_id="google/gemma-3-27b-it-mg-one-click-deploy",
-            project_id="797788125421",
-            location="europe-west4",
-            endpoint_id="5382630586475085824",
+            model_id="gemma-3-27b",
         )
         agent = CodeAgent(
             tools=[load_hipe_report],
