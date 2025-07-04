@@ -8,7 +8,7 @@ from gdm_hackathon.tools.hipe_report.hipe_tool import (
 load_histopathological_immune_infiltration_report,
 load_histopathological_tumor_stroma_compartments_report,
 )
-
+results = evaluate_report_relevance_in_zero_shot('load_histopathological_immune_infiltration_report', 'load_histopathological_tumor_stroma_compartments_report')
 from gdm_hackathon.tools import (
 load_cdk12_heatmap_report, 
 load_dc_heatmap_report,

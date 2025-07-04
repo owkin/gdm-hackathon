@@ -79,6 +79,7 @@ def get_survival_prediction_from_report_patient(
 
 def get_survival_prediction_batch(
     medical_reports: Union[str, List[str]],
+    system_instruction,
     max_tokens: int = 800,
     temperature: float = 0.0,
     use_dedicated_endpoint: bool = True,
@@ -136,12 +137,6 @@ def get_survival_prediction_batch(
             "The examples are intended to be used with instruction-tuned variants. "
             "Please use an instruction-tuned model."
         )
-    
-    # Survival prediction-focused system instruction
-    system_instruction = (
-        "You are a medical treatment specialist. Based on the following report, "
-        "provide clear and concise survival prediction"
-    )
     
     # Process in batches
     all_predictions = []
@@ -283,11 +278,16 @@ if __name__ == "__main__":
             )
         print("Survival Prediction (Single):")
         print(prediction_response)
-        
+
+        system_instruction = (
+            "You are a medical treatment specialist. Based on the following report, "
+            "provide clear and concise survival prediction"
+        )
         # Get survival predictions for batch of reports
         sample_reports = [sample_report, sample_report, sample_report]  # Example with 3 identical reports
         batch_predictions = get_survival_prediction_batch(
             medical_reports=sample_reports,
+            system_instruction=system_instruction,
         )
         print("\nSurvival Predictions (Batch):")
         for i, prediction in enumerate(batch_predictions):
