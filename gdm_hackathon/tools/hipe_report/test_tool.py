@@ -6,7 +6,7 @@ Test script for the HIPE Report Tool
 # %%
 from gdm_hackathon.models.vertex_models import get_model
 from gdm_hackathon.tools.hipe_report.hipe_tool import load_hipe_report
-from smolagents import ToolCallingAgent
+from smolagents import CodeAgent
 
 def test_hipe_report_tool():
     """Test the HIPE report tool with a sample patient ID."""
@@ -33,15 +33,15 @@ def test_hipe_report_tool():
 
 
 def test_with_vertex_ai_agent():
-    """Test with Vertex AI model using ToolCallingAgent."""
+    """Test with Vertex AI model using CodeAgent."""
     print("\n" + "="*60)
-    print("Testing with Vertex AI model using ToolCallingAgent")
+    print("Testing with Vertex AI model using CodeAgent")
     print("="*60)
     
     try:
         # Create an agent with the HIPE report tool
-        model = get_model(model_id="medgemma-27b")
-        agent = ToolCallingAgent(
+        model = get_model("gemma-3-27b")
+        agent = CodeAgent(
             tools=[load_hipe_report],
             model=model,
             name="hipe_report_agent"
