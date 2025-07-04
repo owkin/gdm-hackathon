@@ -41,3 +41,7 @@ from gdm_hackathon.tools.clinical_tool import (
 from gdm_hackathon.tools.pubmed_tool import (
     search_pubmed
 )
+
+from gdm_hackathon.tools.medgemma_tool import (
+    query_medgemma
+)

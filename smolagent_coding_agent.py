@@ -39,6 +39,7 @@ load_s100a8_heatmap_report,
 load_tp53_heatmap_report,
 load_t_nk_heatmap_report,
 search_pubmed,
+query_medgemma,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -82,6 +83,7 @@ load_histopathological_tumor_stroma_compartments_report,
 load_histopathological_tumor_nuclear_morphometry_report,
 load_clinical_report, # clinical report
 search_pubmed, # pubmed tool
+query_medgemma, # medgemma tool
 final_answer_tool,], # agentic tools
     max_steps=20,
 )
@@ -148,6 +150,7 @@ def run_coding_agent():
     Your second output should be a search to contextualize the tools and the report combination.
     <code>
     print(search_pubmed("Biomarkers for bladder cancer"))
+    print(query_medgemma("What are the most promising biomarkers for bladder cancer survival prediction? Be specific in your answer : what pathways or genes, or histological features."))
     </code>
 
     Let begin ! 
