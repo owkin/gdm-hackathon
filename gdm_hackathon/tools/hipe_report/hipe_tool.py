@@ -33,7 +33,7 @@ def _find_report(subdirectory: str, patient_id: str) -> Optional[str]:
             if filename.startswith(patient_id):
                 return file_path
     except Exception as exc:
-        continue
+        return None
 
     return None
 
@@ -106,5 +106,6 @@ def load_histopathological_tumor_stroma_compartments_report(patient_id: str) -> 
 # %%
 if __name__ == "__main__":
     print(load_histopathological_immune_infiltration_report("MW_B_007"))
+    print(load_histopathological_tumor_stroma_compartments_report("MW_B_007"))
 
 # %%
