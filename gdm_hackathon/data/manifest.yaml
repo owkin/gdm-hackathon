@@ -1,0 +1,23 @@
+# Sample data manifest for the hackathon project
+# This file should be replaced with actual patient data paths
+
+patients:
+  patient_001:
+    hipe_report: "data/patients/patient_001/hipe_report.txt"
+    wsi_image: "data/patients/patient_001/wsi_image.tiff"
+    mpp4_image: "data/patients/patient_001/mpp4_image.tiff"
+    spatial_rnaseq: "data/patients/patient_001/spatial_rnaseq.csv"
+    gene_expression: "data/patients/patient_001/gene_expression.csv"
+    clinical_notes: "data/patients/patient_001/clinical_notes.txt"
+    ground_truth: 1  # 1 for responder, 0 for non-responder
+    
+  patient_002:
+    hipe_report: "data/patients/patient_002/hipe_report.txt"
+    wsi_image: "data/patients/patient_002/wsi_image.tiff"
+    mpp4_image: "data/patients/patient_002/mpp4_image.tiff"
+    spatial_rnaseq: "data/patients/patient_002/spatial_rnaseq.csv"
+    gene_expression: "data/patients/patient_002/gene_expression.csv"
+    clinical_notes: "data/patients/patient_002/clinical_notes.txt"
+    ground_truth: 0
+
+# Add more patients as needed... 

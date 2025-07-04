@@ -1,0 +1,5 @@
+{
+  "patient1": "The most expressed gene in the tumor region is EGFR with 2,847 transcripts per spot. Outside the tumor, the most expressed gene is COL1A1 with 1,923 transcripts per spot, indicating high collagen deposition in the surrounding stroma.",
+  "patient2": "The most expressed gene in the tumor region is HER2 with 3,156 transcripts per spot. Outside the tumor, the most expressed gene is FN1 with 2,341 transcripts per spot, showing increased fibronectin expression in the tumor microenvironment.",
+  "patient3": "The most expressed gene in the tumor region is KRAS with 2,634 transcripts per spot. Outside the tumor, the most expressed gene is VIM with 1,876 transcripts per spot, suggesting mesenchymal transition in the surrounding tissue."
+} 
