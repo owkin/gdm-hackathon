@@ -72,7 +72,7 @@ Provide your answer in JSON format with two fields:
             endpoint_id=ENDPOINT_ID,
             endpoint_region=LOCATION,
             max_tokens=2_000,
-            temperature=0.0
+            temperature=0.0,
         )
         
         # Process predictions

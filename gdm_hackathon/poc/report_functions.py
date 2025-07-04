@@ -20,7 +20,10 @@ def get_clinical_report(patient_name: str) -> str:
     """
     with open(CACHE_FOLDER / 'clinical.json', 'r') as f:
         data = json.load(f)
-    return data.get(patient_name, "Patient not found")
+    report =data.get(patient_name, "Patient not found")
+
+    if report == "Patient not found":
+        return _the_tool_but_not_cached(patient_name)
 
 @tool
 def get_hipe_report(patient_name: str) -> str:

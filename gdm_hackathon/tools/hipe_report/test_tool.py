@@ -4,9 +4,9 @@ Test script for the HIPE Report Tool
 """
 
 # %%
+from gdm_hackathon.models.vertex_models import get_model
 from gdm_hackathon.tools.hipe_report.hipe_tool import load_hipe_report
 from smolagents import ToolCallingAgent
-from gdm_hackathon.models.vertex_ai_model import VertexAIServerModel
 
 def test_hipe_report_tool():
     """Test the HIPE report tool with a sample patient ID."""
@@ -40,12 +40,7 @@ def test_with_vertex_ai_agent():
     
     try:
         # Create an agent with the HIPE report tool
-        model = VertexAIServerModel(
-            model_id="medgemma",
-            project_id="gemma-hcls25par-703",
-            location="europe-west4",
-            endpoint_id="4761133837897957376",
-        )
+        model = get_model(model_id="medgemma-27b")
         agent = ToolCallingAgent(
             tools=[load_hipe_report],
             model=model,
