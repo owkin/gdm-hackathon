@@ -556,7 +556,6 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
     if patient_id == "test_patient":
         patient_id = "CH_B_030"
     else:
-        print(f"Converting patient ID {patient_id} to CH ID")
         patient_id = convert_to_ch_id(patient_id)
     
     try:
