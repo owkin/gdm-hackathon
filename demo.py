@@ -124,6 +124,9 @@ coding_agent = CodeAgent(
 # %%
 
 if __name__ == "__main__":
-    result = coding_agent.run("First, call seed_genetic_algorithm to understand what tools are most useful in describing the patients. Based on the previous results so far, describe the patient MW_B_001 and predict their prognosis. Very important : use <code></code> tags and not 'python' or 'tool code' or any other format")
+    result = coding_agent.run("""
+First, call seed_genetic_algorithm to understand what tools are most useful in describing the patients. Based on the previous results so far, describe the patient MW_B_006 and predict their prognosis with medgemma.
+Very important : use tags and not 'python' or 'tool code' or any other format.
+""")
     print(result) 
 # %%
