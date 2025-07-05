@@ -2,60 +2,55 @@
 from smolagents import CodeAgent, FinalAnswerTool
 
 from gdm_hackathon.models.vertex_models import get_model
-
-from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot, seed_genetic_algorithm
-
 from gdm_hackathon.tools import (
-load_histopathological_immune_infiltration_report,
-load_histopathological_tumor_stroma_compartments_report,
-load_histopathological_tumor_nuclear_morphometry_report,
+    load_anti_pd1_pathway_report,
+    load_b_cell_heatmap_report,
+    load_cdk12_heatmap_report,
+    load_cell_cycle_pathway_report,
+    load_clinical_report,
+    load_cna_genomic_report,
+    load_cnv_genomic_report,
+    load_dc_heatmap_report,
+    load_ddr_deficiency_pathway_report,
+    load_egfr_heatmap_report,
+    load_egfr_pathway_report,
+    load_emt_pathway_report,
+    load_endothelial_heatmap_report,
+    load_epithelial_heatmap_report,
+    load_erbb2_heatmap_report,
+    load_fgfr3_heatmap_report,
+    load_fgfr3_pathway_report,
+    load_fibroblast_heatmap_report,
+    load_gii_genomic_report,
+    load_granulocyte_heatmap_report,
+    load_histopathological_immune_infiltration_report,
+    load_histopathological_tumor_nuclear_morphometry_report,
+    load_histopathological_tumor_stroma_compartments_report,
+    load_hypoxia_pathway_report,
+    load_il1b_heatmap_report,
+    load_krt7_heatmap_report,
+    load_malignant_bladder_heatmap_report,
+    load_mast_heatmap_report,
+    load_momac_heatmap_report,
+    load_muscle_heatmap_report,
+    load_other_heatmap_report,
+    load_p53_pathway_report,
+    load_pi3k_pathway_report,
+    load_pik3ca_heatmap_report,
+    load_plasma_heatmap_report,
+    load_rb1_heatmap_report,
+    load_s100a8_heatmap_report,
+    load_snv_indel_genomic_report,
+    load_t_nk_heatmap_report,
+    load_tgf_beta_pathway_report,
+    load_tmb_genomic_report,
+    load_tp53_heatmap_report,
+    query_medgemma,
+    search_pubmed,
 )
-
-from gdm_hackathon.tools import (
-load_clinical_report,
-)
-
-from gdm_hackathon.tools import (
-load_cdk12_heatmap_report, 
-load_dc_heatmap_report,
-load_b_cell_heatmap_report,
-load_egfr_heatmap_report,
-load_erbb2_heatmap_report,
-load_endothelial_heatmap_report,
-load_epithelial_heatmap_report,
-load_fgfr3_heatmap_report,
-load_fibroblast_heatmap_report,
-load_granulocyte_heatmap_report,
-load_il1b_heatmap_report,
-load_krt7_heatmap_report,
-load_malignant_bladder_heatmap_report,
-load_mast_heatmap_report,
-load_momac_heatmap_report,
-load_muscle_heatmap_report,
-load_other_heatmap_report,
-load_pik3ca_heatmap_report,
-load_plasma_heatmap_report,
-load_rb1_heatmap_report,
-load_s100a8_heatmap_report,
-load_tp53_heatmap_report,
-load_t_nk_heatmap_report,
-load_snv_indel_genomic_report,
-load_cnv_genomic_report,
-load_cna_genomic_report,
-load_gii_genomic_report,
-load_tmb_genomic_report,
-load_fgfr3_pathway_report,
-load_egfr_pathway_report,
-load_pi3k_pathway_report,
-load_anti_pd1_pathway_report,
-load_tgf_beta_pathway_report,
-load_hypoxia_pathway_report,
-load_emt_pathway_report,
-load_cell_cycle_pathway_report,
-load_ddr_deficiency_pathway_report,
-load_p53_pathway_report,
-search_pubmed,
-query_medgemma,
+from gdm_hackathon.tools.evaluation_tool import (
+    evaluate_report_relevance_in_zero_shot,
+    seed_genetic_algorithm,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -71,10 +66,10 @@ coding_agent = CodeAgent(
     name="coding_agent",
     description="A coding agent that selects the best 2 tools out of 3 available tools.",
     tools=[
-        evaluate_report_relevance_in_zero_shot, # evaluation tool
-        seed_genetic_algorithm, # cache analysis tool
+        evaluate_report_relevance_in_zero_shot,  # evaluation tool
+        seed_genetic_algorithm,  # cache analysis tool
         # spatial transcriptomics heatmap tools (cell type  / gene expression specific)
-        load_cdk12_heatmap_report, 
+        load_cdk12_heatmap_report,
         load_dc_heatmap_report,
         load_b_cell_heatmap_report,
         load_egfr_heatmap_report,
@@ -125,7 +120,7 @@ coding_agent = CodeAgent(
         query_medgemma,
         # final answer tool
         final_answer_tool,
-        ],
+    ],
     max_steps=50,  # Increased from 20 to 50
 )
 
@@ -134,9 +129,8 @@ coding_agent = CodeAgent(
 # Function to run the coding agent
 def run_coding_agent():
     """Run the smolagent coding agent to find the best report combination for survival prediction."""
-    response = coding_agent.run(
-        r"""
-    # AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
+    prompt = """
+# AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
 
 You are a biomedical AI researcher running an **evolutionary optimization** to discover the best combination of medical reports for predicting patient survival. Your goal is to intelligently evolve solutions based on deep analysis of evaluation results.
 
@@ -242,7 +236,6 @@ Very important use <code> </code> tags and not python or tool code or any other 
 
 Let's begin the optimization !
 """
-
     response = coding_agent.run(prompt)
     return response
 
