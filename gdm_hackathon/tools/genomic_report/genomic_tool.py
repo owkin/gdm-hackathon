@@ -139,7 +139,7 @@ def _load_genomic_description(patient_id: str, data_type: str) -> str:
         The content of the genomic report as a string
     """
     if patient_id == "test_patient":
-        patient_id = "MW_B_001a"
+        patient_id = "MW_B_001"
         
     try:
         # Initialize GCS filesystem
@@ -169,6 +169,6 @@ def _load_genomic_description(patient_id: str, data_type: str) -> str:
 # %%
 if __name__ == "__main__":
     # Test one of the tools
-    print(load_snv_indel_genomic_report("test_patient"))
+    print(load_cna_genomic_report("test_patient"))
 
 # %% 
