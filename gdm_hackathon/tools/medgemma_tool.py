@@ -9,7 +9,7 @@ from gdm_hackathon.models.medgemma_query import get_survival_prediction_from_rep
 # %%
 
 @tool
-def query_medgemma(prompt: str, max_tokens: int = 800, temperature: float = 0.0) -> str:
+def query_medgemma(prompt: str, max_tokens: int = 2_048, temperature: float = 0.0) -> str:
     """
     Query the MedGemma 27B model with a custom prompt for biomedical analysis.
     IMPORTANT: This tool can be used to get insights from the MedGemma model for survival prediction and medical analysis.
@@ -20,7 +20,7 @@ def query_medgemma(prompt: str, max_tokens: int = 800, temperature: float = 0.0)
     
     Args:
         prompt: The prompt or medical report text to send to MedGemma 27B
-        max_tokens: Maximum number of tokens to generate (default: 800)
+        max_tokens: Maximum number of tokens to generate (default: 2048)
         temperature: Sampling temperature for response generation (default: 0.0 for deterministic)
         
     Returns:
