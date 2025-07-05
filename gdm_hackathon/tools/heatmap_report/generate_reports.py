@@ -85,7 +85,7 @@ def generate_heatmap_description(patient_id: str, feature: str, reference_featur
         prompt = f"""
         You are a medical AI assistant analyzing heatmap visualizations for medical research and patient outcome prediction.
         
-        I am providing you with multiple heatmap images for patient {patient_id}:
+        I am providing you with multiple heatmap images for a bladder cancer patient:
         - The MAIN FEATURE to analyze: {feature}
         - Reference features for context: {', '.join(reference_features)}
         
@@ -100,8 +100,11 @@ def generate_heatmap_description(patient_id: str, feature: str, reference_featur
         5. Any specific features or characteristics that stand out for {feature}
         
         Low density areas appear in purple, high density areas appear in yellow.
-        Provide a clear, detailed description that would be useful for medical analysis, 
-        focusing specifically on {feature} expression patterns.
+        Provide a clear, detailed but concise description that would be useful for medical analysis, 
+        focusing specifically on {feature} expression patterns and its significance in the context of
+        bladder cancer prognosis and the reference images.
+
+        IMPORTANT: Start directly with the analysis. Do not include any introductory phrases like "Okay," "I'll analyze," or similar pleasantries. Do not include any disclaimers at the end. Provide only the medical analysis.
         """
         
         # Directly query the model as an OpenAI endpoint
@@ -210,9 +213,9 @@ def list_patients_and_features() -> tuple[list[str], list[str]]:
             if filename.endswith('_proportions.png'):
                 base_name = filename.replace('_proportions.png', '')
                 
-                # Patient ID pattern is CH_*_*** (e.g., CH_B_041, CH_B_073)
+                # Patient ID pattern is MW_B_* (e.g., MW_B_041, MW_B_073)
                 import re
-                patient_match = re.match(r'(CH_[A-Z]_\d+)', base_name)
+                patient_match = re.match(r'(MW_B_\d+)', base_name)
                 
                 if patient_match:
                     patient_id = patient_match.group(1)
@@ -240,7 +243,7 @@ if __name__ == "__main__":
     
     # Test with a sample patient/feature
     print("Testing heatmap description generation:")
-    print(generate_heatmap_description("CH_B_041", "RB1"))
+    print(generate_heatmap_description("MW_B_001", "RB1"))
 
 
 # %%

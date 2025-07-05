@@ -58,3 +58,11 @@ from gdm_hackathon.tools.genomic_report.genomic_tool import (
 from gdm_hackathon.tools.clinical_tool import (
     load_clinical_report
 )
+
+from gdm_hackathon.tools.pubmed_tool import (
+    search_pubmed
+)
+
+from gdm_hackathon.tools.medgemma_tool import (
+    query_medgemma
+)

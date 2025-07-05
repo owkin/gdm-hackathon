@@ -56,6 +56,67 @@ def read_from_cache(tool1_name: str, tool2_name: str) -> dict | None:
                 return None
 
 @tool
+def seed_genetic_algorithm() -> str:
+    """
+    Load the cache file and return the top 3 and bottom 3 tool combinations based on accuracy.
+    
+    Returns:
+        str: A formatted string showing the top 3 and bottom 3 combinations with their metrics
+    """
+    if not (CACHE_DIR / "evaluation_results.json").exists():
+        return "No cache file found. No evaluations have been run yet."
+    
+    with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+        cache_data = json.load(f)
+    
+    if not cache_data:
+        return "Cache file is empty. No evaluations have been run yet."
+    
+    # Convert to list and sort by accuracy
+    combinations = []
+    for key, value in cache_data.items():
+        combinations.append({
+            'key': key,
+            'tool1': value['tool1_name'],
+            'tool2': value['tool2_name'],
+            'accuracy': value['accuracy'],
+            'precision': value['precision'],
+            'recall': value['recall'],
+            'specificity': value['specificity']
+        })
+    
+    # Sort by accuracy (descending)
+    combinations.sort(key=lambda x: x['accuracy'], reverse=True)
+    
+    # Get top 3 and bottom 3
+    top_3 = combinations[:3]
+    bottom_3 = combinations[-3:] if len(combinations) >= 3 else combinations
+    
+    result = "📊 CACHE ANALYSIS: TOP 3 & BOTTOM 3 TOOL COMBINATIONS\n\n"
+    
+    result += "🏆 TOP 3 BEST COMBINATIONS:\n"
+    for i, combo in enumerate(top_3, 1):
+        result += f"#{i} - {combo['tool1']} + {combo['tool2']}\n"
+        result += f"   Accuracy: {combo['accuracy']:.2f}%\n"
+        result += f"   Precision: {combo['precision']:.2f}%\n"
+        result += f"   Recall: {combo['recall']:.2f}%\n"
+        result += f"   Specificity: {combo['specificity']:.2f}%\n"
+        result += f"   Cache Key: {combo['key']}\n\n"
+    
+    result += "📉 BOTTOM 3 WORST COMBINATIONS:\n"
+    for i, combo in enumerate(bottom_3, 1):
+        result += f"#{len(combinations) - len(bottom_3) + i} - {combo['tool1']} + {combo['tool2']}\n"
+        result += f"   Accuracy: {combo['accuracy']:.2f}%\n"
+        result += f"   Precision: {combo['precision']:.2f}%\n"
+        result += f"   Recall: {combo['recall']:.2f}%\n"
+        result += f"   Specificity: {combo['specificity']:.2f}%\n"
+        result += f"   Cache Key: {combo['key']}\n\n"
+    
+    result += f"Total combinations evaluated: {len(combinations)}\n"
+    
+    return result
+
+@tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
     """
     Evaluate the relevance of a function designed to extract prognostic information from 
@@ -150,6 +211,8 @@ Provide your answer in JSON format with two fields for each patient:
             prediction_text = prediction_text + '\n```'
         json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
         # Process predictions
+        if json_match is None:
+            raise ValueError("Could not extract JSON from MedGemma response")
         results = json.loads(json_match.group(1))
         total_predictions = len(results)
     except Exception as e:

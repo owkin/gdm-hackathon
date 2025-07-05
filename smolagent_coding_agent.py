@@ -2,7 +2,7 @@
 from smolagents import CodeAgent, FinalAnswerTool
 from gdm_hackathon.models.vertex_models import get_model
 
-from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot
+from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot, seed_genetic_algorithm
 
 from gdm_hackathon.tools import (
 load_histopathological_immune_infiltration_report,
@@ -53,6 +53,8 @@ load_emt_pathway_report,
 load_cell_cycle_pathway_report,
 load_ddr_deficiency_pathway_report,
 load_p53_pathway_report,
+search_pubmed,
+query_medgemma,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -69,7 +71,8 @@ coding_agent = CodeAgent(
     description="A coding agent that selects the best 2 tools out of 3 available tools.",
     tools=[
         evaluate_report_relevance_in_zero_shot, # evaluation tool
-        # # spatial transcriptomics heatmap tools (cell type  / gene expression specific)
+        seed_genetic_algorithm, # cache analysis tool
+        # spatial transcriptomics heatmap tools (cell type  / gene expression specific)
         load_cdk12_heatmap_report, 
         load_dc_heatmap_report,
         load_b_cell_heatmap_report,
@@ -114,9 +117,13 @@ coding_agent = CodeAgent(
         load_cell_cycle_pathway_report,
         load_ddr_deficiency_pathway_report,
         load_p53_pathway_report,
-        final_answer_tool,
         # clinical report
-        load_clinical_report
+        load_clinical_report,
+        # helper tools
+        search_pubmed,
+        query_medgemma,
+        # final answer tool
+        final_answer_tool,
         ],
     max_steps=50,  # Increased from 20 to 50
 )
@@ -129,6 +136,14 @@ def run_coding_agent():
     # AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
 
 You are a biomedical AI researcher running an **evolutionary optimization** to discover the best combination of medical reports for predicting patient survival. Your goal is to intelligently evolve solutions based on deep analysis of evaluation results.
+
+## 🚀 MANDATORY FIRST STEP: Understand Current Progress
+
+**BEFORE starting any optimization, you MUST first call `seed_genetic_algorithm()` to understand what has already been evaluated and learn from previous results.**
+
+After reviewing the cache, you may optionally use:
+- `search_pubmed()` to research relevant biomedical literature
+- `query_medgemma()` to get insights about specific tools or combinations
 
 ## 🧬 Your Methodology: Evolutionary Optimization
 
@@ -170,9 +185,9 @@ This is what your thought process should look like after an evaluation.
 
 **Situation**: You have just received the results for your 3 **Candidate Pairs** in Generation 1.
 
-* **Pair 1**: `("clinical_report", "fgfr3_pathway_report")` -> **Accuracy: 65%**, Balanced (FP: 3, FN: 2).
-* **Pair 2**: `("histopathological_immune_infiltration_report", "cd8_heatmap_report")` -> **Accuracy: 78%**, but Unbalanced (FP: 1, **FN: 6**).
-* **Pair 3**: `("tp53_genomic_report", "emt_pathway_report")` -> **Accuracy: 55%**, Unbalanced (**FP: 7**, FN: 1).
+* **Pair 1**: `("load_clinical_report", "load_fgfr3_pathway_report")` -> **Accuracy: 65%**, Balanced (FP: 3, FN: 2).
+* **Pair 2**: `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")` -> **Accuracy: 78%**, but Unbalanced (FP: 1, **FN: 6**).
+* **Pair 3**: `("load_tmb_genomic_report", "load_emt_pathway_report")` -> **Accuracy: 55%**, Unbalanced (**FP: 7**, FN: 1).
 
 **Your Thought Process should look like this:**
 
@@ -181,16 +196,16 @@ Start of the example:
 Thought: The results for Generation 1 are in.
 
 **1. Analysis:**
-* Pair 2 (`histo_immune`, `cd8_heatmap`) has the highest accuracy (78%), but the confusion matrix shows it is too pessimistic, with 6 False Negatives. The reasoning for these FNs likely shows that even with strong immune signals, the model defaults to "Below Median" because it's missing context on tumor aggressiveness.
-* Pair 1 (`clinical`, `fgfr3_pathway`) is less accurate (65%) but much more balanced. This is a stable, but weaker, candidate.
-* Pair 3 (`tp53`, `emt`) performed poorly and was too optimistic. I will discard this one.
+* Pair 2 has the highest accuracy (78%), but the confusion matrix shows it is too pessimistic, with 6 False Negatives. The reasoning for these FNs likely shows that even with strong immune signals, the model defaults to "Below Median" because it's missing context on tumor aggressiveness.
+* Pair 1 is less accurate (65%) but much more balanced. This is a stable, but weaker, candidate.
+* Pair 3 performed poorly and was too optimistic. I will discard this one.
 
 **2. Strategy for Generation 2:**
 My goal is to improve upon the high accuracy of Pair 2 while fixing its pessimistic bias.
 
-* **(Elitism)**: I will keep the best pair, `("histopathological_immune_infiltration_report", "cd8_heatmap_report")`, in the next generation to ensure I don't lose my best result.
-* **(Informed Mutation)**: My hypothesis is that Pair 2 needs tumor context to be less pessimistic. I will **mutate** it by swapping one component for a report on tumor characteristics. I'll test `("histopathological_immune_infiltration_report", "histopathological_grade_report")`. This tests if adding tumor grade can correct the False Negatives.
-* **(Crossover)**: I will create a new pair by **crossing over** the best components from my top two pairs. `histopathological_immune_infiltration_report` was the strongest component from the most accurate pair, and `clinical_report` was from the most balanced pair. This leads to the new candidate: `("histopathological_immune_infiltration_report", "clinical_report")`.
+* **(Elitism)**: I will keep the best pair, `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")`, in the next generation to ensure I don't lose my best result.
+* **(Informed Mutation)**: My hypothesis is that Pair 2 needs tumor context to be less pessimistic. I will **mutate** it by swapping one component for a report on tumor characteristics. I'll test `("load_histopathological_immune_infiltration_report", "load_histopathological_grade_report")`. This tests if adding tumor grade can correct the False Negatives.
+* **(Crossover)**: I will create a new pair by **crossing over** the best components from my top two pairs. `load_histopathological_immune_infiltration_report` was the strongest component from the most accurate pair, and `load_clinical_report` was from the most balanced pair. This leads to the new candidate: `("load_histopathological_immune_infiltration_report", "load_clinical_report")`.
 
 **3. Plan for Generation 2 Evaluation:**
 
@@ -200,27 +215,29 @@ Based on my strategy, the new population of 3 Candidate Pairs is ready. I will n
 
 <code>
 # Elite Pair (from previous generation)
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="cd8_heatmap_report"))
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_cdk12_heatmap_report"))
 # Mutated Pair
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="histopathological_grade_report"))
-# Crossover Pair
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="clinical_report"))
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_clinical_report"))
 </code>
 
 End of the example.
 
 ## Your First Output
 
-Thought: I will start my evolutionary optimization. For Generation 1, I need to create a diverse initial population. I will create a population of 3 **Candidate Pairs**, pairing a clinical report with a pathway report, a histopathology report with a spatial report, and a genomic report with another pathway report. Then I will evaluate them all.
+Thought: I must first understand the current state of the optimization by calling `seed_genetic_algorithm()` to see what combinations have already been evaluated. This will help me learn from previous results and avoid repeating evaluations.
 
 <code>
-# Generation 1 Evaluation Plan
-print(evaluate_report_relevance_in_zero_shot(tool1_name="load_clinical_report", tool2_name="load_fgfr3_pathway_report"))
-print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_cnv_genomic_report"))
-print(evaluate_report_relevance_in_zero_shot(tool1_name="load_egfr_pathway_report", tool2_name="load_tp53_heatmap_report"))
+# MANDATORY FIRST STEP: Understand current progress
+print(seed_genetic_algorithm())
 </code>
 
-Let's begin the optimization, and don't forget to justify your reasoning for the final answer ! 
+Based on the cache analysis, I will then design my evolutionary optimization strategy and begin evaluating new combinations.
+
+## End of example
+
+Very important use <code> </code> tags and not python or tool code or any other format
+
+Let's begin the optimization !
 """
 
     )
