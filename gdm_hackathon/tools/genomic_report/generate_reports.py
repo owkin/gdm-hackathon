@@ -109,6 +109,11 @@ IMPORTANT: Start directly with the analysis. Do not include any introductory phr
         if response.status_code == 200:
             result = response.json()
             summary = result["choices"][0]["message"]["content"]
+            
+            # Replace the CH patient ID with the MW patient ID
+            patient_id_pattern = re.compile(r'CH_B_\d+a')
+            summary = patient_id_pattern.sub(convert_to_mw_id(patient_id), summary)
+
             return summary
         else:
             return f"Error: API call failed with status {response.status_code}: {response.text}"
