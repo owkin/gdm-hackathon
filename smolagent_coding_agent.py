@@ -54,7 +54,7 @@ load_cell_cycle_pathway_report,
 load_ddr_deficiency_pathway_report,
 load_p53_pathway_report,
 search_pubmed,
-query_medgemma
+query_medgemma,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -117,10 +117,11 @@ coding_agent = CodeAgent(
         load_ddr_deficiency_pathway_report,
         load_p53_pathway_report,
         # clinical report
-        load_clinical_report
+        load_clinical_report,
         # helper tools
         search_pubmed,
-        query_medgemma
+        query_medgemma,
+        # final answer tool
         final_answer_tool,
         ],
     max_steps=20,
@@ -155,14 +156,14 @@ def run_coding_agent():
 
     ## Your Task:
     1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="test_patient" to understand the type and quality of information provided.
-    2. **Search pubmed**: Use reasoning and the search_pubmed tool to find the best report combination for survival prediction.
+    2. **Understand the task**: Use reasoning and the tools search_pubmed and query_medgemma to understand the task and the tools.
     3. **Select the most promising combination**: Select the most promising combination of 2 tools for survival prediction.
     4. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
-    5. **Iterate step 3 and 4**: Iterate step 3 and 4 until you ran out of step budget.
+    5. **Iterate step 3 and 4**: Iterate step 3 and 4 until you run out of step budget (max_steps=20, do at least 10 steps).
     6. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
 
     ## Expected Output:
-    Your response should include:1"
+    Your response should include:
     - Accuracy score of the best, your preferred combination, using evaluate_report_relevance_in_zero_shot
     - Clear recommendation of the best combination
     - Detailed explanation of why this combination is optimal for survival prediction
@@ -172,6 +173,7 @@ def run_coding_agent():
     - The goal is to maximize the accuracy of treatment response prediction
     - Think of this optimization as a genetic algorithm, where you are trying to find the best combination of 2 tools for survival prediction.
     - The evaluation tool uses real patient data and MedGemma predictions, so the results are meaningful
+    - Whenever you are unsure, you can use the tools search_pubmed and query_medgemma to understand the task and the tools or the results.
 
     Start by investigating each tool, then optimize in a genetic way the combinations to find the optimal pair for survival prediction. 
     You can use the final_answer_tool to provide your final answer.
