@@ -185,9 +185,9 @@ This is what your thought process should look like after an evaluation.
 
 **Situation**: You have just received the results for your 3 **Candidate Pairs** in Generation 1.
 
-* **Pair 1**: `("clinical_report", "fgfr3_pathway_report")` -> **Accuracy: 65%**, Balanced (FP: 3, FN: 2).
-* **Pair 2**: `("histopathological_immune_infiltration_report", "cd8_heatmap_report")` -> **Accuracy: 78%**, but Unbalanced (FP: 1, **FN: 6**).
-* **Pair 3**: `("tp53_genomic_report", "emt_pathway_report")` -> **Accuracy: 55%**, Unbalanced (**FP: 7**, FN: 1).
+* **Pair 1**: `("load_clinical_report", "load_fgfr3_pathway_report")` -> **Accuracy: 65%**, Balanced (FP: 3, FN: 2).
+* **Pair 2**: `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")` -> **Accuracy: 78%**, but Unbalanced (FP: 1, **FN: 6**).
+* **Pair 3**: `("load_tmb_genomic_report", "load_emt_pathway_report")` -> **Accuracy: 55%**, Unbalanced (**FP: 7**, FN: 1).
 
 **Your Thought Process should look like this:**
 
@@ -196,16 +196,16 @@ Start of the example:
 Thought: The results for Generation 1 are in.
 
 **1. Analysis:**
-* Pair 2 (`histo_immune`, `cd8_heatmap`) has the highest accuracy (78%), but the confusion matrix shows it is too pessimistic, with 6 False Negatives. The reasoning for these FNs likely shows that even with strong immune signals, the model defaults to "Below Median" because it's missing context on tumor aggressiveness.
-* Pair 1 (`clinical`, `fgfr3_pathway`) is less accurate (65%) but much more balanced. This is a stable, but weaker, candidate.
-* Pair 3 (`tp53`, `emt`) performed poorly and was too optimistic. I will discard this one.
+* Pair 2 has the highest accuracy (78%), but the confusion matrix shows it is too pessimistic, with 6 False Negatives. The reasoning for these FNs likely shows that even with strong immune signals, the model defaults to "Below Median" because it's missing context on tumor aggressiveness.
+* Pair 1 is less accurate (65%) but much more balanced. This is a stable, but weaker, candidate.
+* Pair 3 performed poorly and was too optimistic. I will discard this one.
 
 **2. Strategy for Generation 2:**
 My goal is to improve upon the high accuracy of Pair 2 while fixing its pessimistic bias.
 
-* **(Elitism)**: I will keep the best pair, `("histopathological_immune_infiltration_report", "cd8_heatmap_report")`, in the next generation to ensure I don't lose my best result.
-* **(Informed Mutation)**: My hypothesis is that Pair 2 needs tumor context to be less pessimistic. I will **mutate** it by swapping one component for a report on tumor characteristics. I'll test `("histopathological_immune_infiltration_report", "histopathological_grade_report")`. This tests if adding tumor grade can correct the False Negatives.
-* **(Crossover)**: I will create a new pair by **crossing over** the best components from my top two pairs. `histopathological_immune_infiltration_report` was the strongest component from the most accurate pair, and `clinical_report` was from the most balanced pair. This leads to the new candidate: `("histopathological_immune_infiltration_report", "clinical_report")`.
+* **(Elitism)**: I will keep the best pair, `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")`, in the next generation to ensure I don't lose my best result.
+* **(Informed Mutation)**: My hypothesis is that Pair 2 needs tumor context to be less pessimistic. I will **mutate** it by swapping one component for a report on tumor characteristics. I'll test `("load_histopathological_immune_infiltration_report", "load_histopathological_grade_report")`. This tests if adding tumor grade can correct the False Negatives.
+* **(Crossover)**: I will create a new pair by **crossing over** the best components from my top two pairs. `load_histopathological_immune_infiltration_report` was the strongest component from the most accurate pair, and `load_clinical_report` was from the most balanced pair. This leads to the new candidate: `("load_histopathological_immune_infiltration_report", "load_clinical_report")`.
 
 **3. Plan for Generation 2 Evaluation:**
 
@@ -215,11 +215,9 @@ Based on my strategy, the new population of 3 Candidate Pairs is ready. I will n
 
 <code>
 # Elite Pair (from previous generation)
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="cd8_heatmap_report"))
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_cdk12_heatmap_report"))
 # Mutated Pair
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="histopathological_grade_report"))
-# Crossover Pair
-print(evaluate_report_relevance_in_zero_shot(tool1_name="histopathological_immune_infiltration_report", tool2_name="clinical_report"))
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_clinical_report"))
 </code>
 
 End of the example.
