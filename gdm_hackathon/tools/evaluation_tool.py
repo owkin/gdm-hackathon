@@ -2,21 +2,128 @@ import importlib
 import json
 import gcsfs
 from smolagents import tool
-from gdm_hackathon.models.medgemma_query import get_survival_prediction_batch
+from gdm_hackathon.models.medgemma_query import get_survival_prediction_from_report_patient
 import re
-
 from gdm_hackathon.config import GCP_PROJECT_ID
+from pathlib import Path
 
 SYSTEM_INSTRUCTION = (
-    "You are a medical treatment specialist. Based on the following report, "
-    "provide clear and concise survival prediction. The population is bladder cancer patients."
+    "You are a highly skilled biomedical researcher with extensive expertise in "
+    "analyzing various types of medical data, including H&E stained images, bulk "
+    "RNA sequencing, spatial transcriptomics, and comprehensive clinical and treatment "
+    "records. Your primary task is to predict patient survival based on provided "
+    "medical reports."
 )
+
+CACHE_DIR = Path(__file__).parent.parent.parent / "cache"
+if not CACHE_DIR.exists():
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def add_to_cache(result_summary: str, tool1_name: str, tool2_name: str, accuracy: float, precision: float, recall: float, specificity: float):
+    """
+    Add the result summary to the cache file.
+    """
+    # if the cache file already exists, load it
+    if (CACHE_DIR / "evaluation_results.json").exists():
+        with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+            cache_data = json.load(f)
+    else:
+        cache_data = {}
+        
+    cache_data[f"{tool1_name}_{tool2_name}"] = {
+        "tool1_name": tool1_name,
+        "tool2_name": tool2_name,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,   
+        "specificity": specificity,
+        "report": result_summary,
+    }
+    with open(CACHE_DIR / "evaluation_results.json", "w") as f:
+        json.dump(cache_data, f)
+
+def read_from_cache(tool1_name: str, tool2_name: str) -> dict | None:
+    """
+    Check if the result is already in the cache file.
+    """
+    if (CACHE_DIR / "evaluation_results.json").exists():
+        with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+            cache_data = json.load(f)  
+            if f"{tool1_name}_{tool2_name}" in cache_data:
+                results = cache_data[f"{tool1_name}_{tool2_name}"]
+                return results
+            else:
+                return None
+
+@tool
+def seed_genetic_algorithm() -> str:
+    """
+    Load the cache file and return the top 3 and bottom 3 tool combinations based on accuracy.
+    
+    Returns:
+        str: A formatted string showing the top 3 and bottom 3 combinations with their metrics
+    """
+    if not (CACHE_DIR / "evaluation_results.json").exists():
+        return "No cache file found. No evaluations have been run yet."
+    
+    with open(CACHE_DIR / "evaluation_results.json", "r") as f:
+        cache_data = json.load(f)
+    
+    if not cache_data:
+        return "Cache file is empty. No evaluations have been run yet."
+    
+    # Convert to list and sort by accuracy
+    combinations = []
+    for key, value in cache_data.items():
+        combinations.append({
+            'key': key,
+            'tool1': value['tool1_name'],
+            'tool2': value['tool2_name'],
+            'accuracy': value['accuracy'],
+            'precision': value['precision'],
+            'recall': value['recall'],
+            'specificity': value['specificity']
+        })
+    
+    # Sort by accuracy (descending)
+    combinations.sort(key=lambda x: x['accuracy'], reverse=True)
+    
+    # Get top 3 and bottom 3
+    top_3 = combinations[:3]
+    bottom_3 = combinations[-3:] if len(combinations) >= 3 else combinations
+    
+    result = "📊 CACHE ANALYSIS: TOP 3 & BOTTOM 3 TOOL COMBINATIONS\n\n"
+    
+    result += "🏆 TOP 3 BEST COMBINATIONS:\n"
+    for i, combo in enumerate(top_3, 1):
+        result += f"#{i} - {combo['tool1']} + {combo['tool2']}\n"
+        result += f"   Accuracy: {combo['accuracy']:.2f}%\n"
+        result += f"   Precision: {combo['precision']:.2f}%\n"
+        result += f"   Recall: {combo['recall']:.2f}%\n"
+        result += f"   Specificity: {combo['specificity']:.2f}%\n"
+        result += f"   Cache Key: {combo['key']}\n\n"
+    
+    result += "📉 BOTTOM 3 WORST COMBINATIONS:\n"
+    for i, combo in enumerate(bottom_3, 1):
+        result += f"#{len(combinations) - len(bottom_3) + i} - {combo['tool1']} + {combo['tool2']}\n"
+        result += f"   Accuracy: {combo['accuracy']:.2f}%\n"
+        result += f"   Precision: {combo['precision']:.2f}%\n"
+        result += f"   Recall: {combo['recall']:.2f}%\n"
+        result += f"   Specificity: {combo['specificity']:.2f}%\n"
+        result += f"   Cache Key: {combo['key']}\n\n"
+    
+    result += f"Total combinations evaluated: {len(combinations)}\n"
+    
+    return result
 
 @tool
 def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> str:
     """
-    Evaluate the relevance of a report generation function by predicting treatment response
-    using MedGemma and comparing to ground truth.
+    Evaluate the relevance of a function designed to extract prognostic information from 
+    various feature-specific reports (e.g. histopathological immune infiltration, or
+    the spatial heterogeneity of TP53) into a unified patient-level report. The 
+    evaluation is based on the ability of MedGemma to predict long vs short patient 
+    survival from the unified report.
     
     Args:
         tool1_name (str): The name of the first sub report to be generated per patient
@@ -25,6 +132,10 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     Returns:
         str: Accuracy score and evaluation details
     """
+    # check if the result is already in the cache
+    results = read_from_cache(tool1_name, tool2_name)
+    if results is not None:
+        return results["report"]
     
     # Load ground truth data
     fs = gcsfs.GCSFileSystem(project=GCP_PROJECT_ID)
@@ -41,120 +152,76 @@ def evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str) -> 
     tool1_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool1_name)
     tool2_fn = getattr(importlib.import_module("gdm_hackathon.tools"), tool2_name)
 
-    # Generate reports for all patients
-    patient_reports = []
+    # Generate one report for all patients
     patient_names = list(ground_truth.keys())
     
+    report = ""
+    report += "--------------------------------\n"
     for patient_name in patient_names:
-        report = f"""Patient report for {patient_name}:
+        report += f"""Patient report for {patient_name}:
 
+{tool1_name} for {patient_name}:
 {tool1_fn(patient_name)}
 
+{tool2_name} for {patient_name}:
 {tool2_fn(patient_name)}
 
-Based on the above patient report, determine the survival prediction for this patient.
+--------------------------------\n"""
 
-Provide your answer in JSON format with two fields:
-- "prediction": either "good survival" or "bad survival"
+    report += """
+Based on the above patient reports, predict for each patient whether they will have a long or short survival time.
+There should be roughly the same number of long and short survival predictions.
+
+Provide your answer in JSON format with two fields for each patient:
+- "prediction": either "long survival" or "short survival"
 - "reasoning": a brief explanation (keep it short, max 2-3 sentences)
 
 ```json
-{{
-  "prediction": "good survival or bad survival",
-  "reasoning": "brief explanation"
-}}
+{
+"""
+    for patient_name in patient_names:
+        report += f"""
+  "{patient_name}": {{
+    "prediction": "long survival or short survival",
+    "reasoning": "brief explanation"
+  }}
+"""
+    report += """
+}
 ```
+
+```json
+{
 """
         
-        patient_reports.append(report)
-    
     # Get batch predictions from MedGemma
     try:
-        batch_predictions = get_survival_prediction_batch(
-            medical_reports=patient_reports,
+        prediction_response = get_survival_prediction_from_report_patient(
+            medical_report=report,
             system_instruction=SYSTEM_INSTRUCTION,
-            max_tokens=2_000,
+            max_tokens=1_024,
             temperature=0.0,
         )
-        
+        # Extract the prediction from the response
+        prediction_text = prediction_response.strip()
+        # add back the ```json and ``` at the beginning and end of the prediction_text if needed
+        if not prediction_text.startswith('```json'):
+            prediction_text = '```json\n{\n' + prediction_text
+        if not prediction_text.endswith('```'):
+            prediction_text = prediction_text + '\n```'
+        json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
         # Process predictions
-        for i, (patient_name, prediction_response) in enumerate(zip(patient_names, batch_predictions)):
-            try:
-                # Extract the prediction from the response
-                prediction_text = prediction_response['predictions'][0].strip()
-                
-                
-                # Look for JSON content in the response
-                json_match = re.search(r'```json\s*(\{.*?\})\s*```', prediction_text, re.DOTALL)
-                if json_match:
-                    json_str = json_match.group(1)
-                    try:
-                        parsed_response = json.loads(json_str)
-                        prediction_field = parsed_response.get('prediction', '').lower()
-                        reasoning = parsed_response.get('reasoning', '')
-                        
-                        if 'good survival' in prediction_field:
-                            prediction = 1
-                        elif 'bad survival' in prediction_field:
-                            prediction = 0
-                        else:
-                            raise ValueError(f"Invalid prediction value: {prediction_field}")
-                            
-                    except json.JSONDecodeError:
-                        raise ValueError(f"Failed to parse JSON: {json_str}")
-                else:
-                    # Fallback: look for the answer within <answer> tags
-                    answer_match = re.search(r'<answer>(.*?)</answer>', prediction_text, re.DOTALL)
-                    if answer_match:
-                        answer_content = answer_match.group(1).strip().lower()
-                    else:
-                        # Fallback: use the whole response
-                        answer_content = prediction_text.strip().lower()
-                    
-                    # Parse the response
-                    if 'good survival' in answer_content:
-                        prediction = 1
-                    elif 'bad survival' in answer_content:
-                        prediction = 0
-                    else:
-                        # Fallback: try to find any indication of response
-                        if any(word in answer_content for word in ['good', 'positive', 'survival', 'success']):
-                            prediction = 1
-                        elif any(word in answer_content for word in ['bad', 'negative', 'fail', 'poor', 'death']):
-                            prediction = 0
-                        else:
-                            raise ValueError(f"Could not parse response: {answer_content}")
-                
-                # Compare with ground truth
-                true_value = ground_truth[patient_name]
-                is_correct = prediction == true_value
-                
-                if is_correct:
-                    correct_predictions += 1
-                
-                total_predictions += 1
-                
-                results[patient_name] = {
-                    'prediction': prediction,
-                    'ground_truth': true_value,
-                    'correct': is_correct,
-                    'raw_response': prediction_text,
-                    'reasoning': reasoning if 'reasoning' in locals() else 'No reasoning provided'
-                }
-                
-            except Exception as e:
-                results[patient_name] = {
-                    'error': f"Failed to parse prediction: {str(e)}",
-                    'ground_truth': ground_truth[patient_name],
-                    'raw_response': prediction_response
-                }
-                total_predictions += 1
-                
+        if json_match is None:
+            raise ValueError("Could not extract JSON from MedGemma response")
+        results = json.loads(json_match.group(1))
+        total_predictions = len(results)
     except Exception as e:
-        # If batch fails, fall back to individual processing
+        print(f"MedGemma API call failed: {e}")
+        print(prediction_text)
+        # If MedGemma fails completely, fall back to individual processing
         for patient_name in patient_names:
             results[patient_name] = {
-                'error': f"Batch processing failed: {str(e)}",
+                'error': f"MedGemma API call failed: {str(e)}",
                 'ground_truth': ground_truth[patient_name]
             }
             total_predictions += 1
@@ -171,25 +238,27 @@ Provide your answer in JSON format with two fields:
     tn_examples = []
     fn_examples = []
     
-    for patient, result in results.items():
-        if 'error' not in result:
-            prediction = result['prediction']
-            ground_truth = result['ground_truth']
-            
-            if prediction == 1 and ground_truth == 1:
-                true_positives += 1
-                tp_examples.append((patient, result))
-            elif prediction == 1 and ground_truth == 0:
-                false_positives += 1
-                fp_examples.append((patient, result))
-            elif prediction == 0 and ground_truth == 0:
-                true_negatives += 1
-                tn_examples.append((patient, result))
-            elif prediction == 0 and ground_truth == 1:
-                false_negatives += 1
-                fn_examples.append((patient, result))
+    for patient in patient_names:
+        if patient not in results:
+            continue
+        if "prediction" not in results[patient]:
+            continue
+        prediction = results[patient]['prediction']
+        if prediction == 'long survival' and ground_truth[patient] == 1:
+            true_positives += 1
+            tp_examples.append((patient, results[patient]))
+        elif prediction == 'long survival' and ground_truth[patient] == 0:
+            false_positives += 1
+            fp_examples.append((patient, results[patient]))
+        elif prediction == 'short survival' and ground_truth[patient] == 0:
+            true_negatives += 1
+            tn_examples.append((patient, results[patient]))
+        elif prediction == 'short survival' and ground_truth[patient] == 1:
+            false_negatives += 1
+            fn_examples.append((patient, results[patient]))
     
     # Calculate metrics
+    correct_predictions = true_positives + true_negatives
     accuracy = (correct_predictions / total_predictions) * 100 if total_predictions > 0 else 0
     precision = (true_positives / (true_positives + false_positives)) * 100 if (true_positives + false_positives) > 0 else 0
     recall = (true_positives / (true_positives + false_negatives)) * 100 if (true_positives + false_negatives) > 0 else 0
@@ -222,33 +291,38 @@ Provide your answer in JSON format with two fields:
     if tp_examples:
         patient, result = random.choice(tp_examples)
         result_summary += f"\nTrue Positive Example:"
-        result_summary += f"\n  Predicted: Good Survival, Actual: Good Survival ✓"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Predicted: long survival, Actual: long survival ✓"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nTrue Positive Example: No patients in this category\n"
     
     if fp_examples:
         patient, result = random.choice(fp_examples)
         result_summary += f"\nFalse Positive Example:"
-        result_summary += f"\n  Predicted: Good Survival, Actual: Bad Survival ✗"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Predicted: long survival, Actual: short survival ✗"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nFalse Positive Example: No patients in this category\n"
     
     if tn_examples:
         patient, result = random.choice(tn_examples)
         result_summary += f"\nTrue Negative Example:"
-        result_summary += f"\n  Predicted: Bad Survival, Actual: Bad Survival ✓"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Predicted: short survival, Actual: short survival ✓"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nTrue Negative Example: No patients in this category\n"
     
     if fn_examples:
         patient, result = random.choice(fn_examples)
         result_summary += f"\nFalse Negative Example:"
-        result_summary += f"\n  Predicted: Bad Survival, Actual: Good Survival ✗"
-        result_summary += f"\n  Reasoning: {result.get('reasoning', 'No reasoning provided')}\n"
+        result_summary += f"\n  Predicted: short survival, Actual: long survival ✗"
+        result_summary += f"\n  Reasoning: {result['reasoning']}\n"
     else:
         result_summary += "\nFalse Negative Example: No patients in this category\n"
     
+    # cache the result in a json file
+    add_to_cache(result_summary, tool1_name, tool2_name, accuracy, precision, recall, specificity)
+
+
+
     return result_summary 

@@ -13,6 +13,7 @@ from gdm_hackathon.config import ENDPOINT_MODELS_DICT, GCP_PROJECT_ID, GCP_LOCAT
 
 def get_survival_prediction_from_report_patient(
     medical_report: str,
+    system_instruction: str | None = None,
     max_tokens: int = 800,
     temperature: float = 0.0,
     use_dedicated_endpoint: bool = True,
@@ -61,9 +62,13 @@ def get_survival_prediction_from_report_patient(
         )
     
     # Survival prediction-focused system instruction
-    system_instruction = (
-        "You are a medical treatment specialist. Based on the following report, "
-        "provide clear and concise survival prediction. "
+    if system_instruction is None:
+        system_instruction = (
+        "You are a highly skilled biomedical researcher with extensive expertise in "
+        "analyzing various types of medical data, including H&E stained images, bulk "
+        "RNA sequencing, spatial transcriptomics, and comprehensive clinical and treatment "
+        "records. Your primary task is to predict patient survival based on provided "
+        "medical reports."
     )
     
     return _query_vertex_ai(
@@ -280,8 +285,11 @@ if __name__ == "__main__":
         print(prediction_response)
 
         system_instruction = (
-            "You are a medical treatment specialist. Based on the following report, "
-            "provide clear and concise survival prediction"
+            "You are a highly skilled biomedical researcher with extensive expertise in "
+            "analyzing various types of medical data, including H&E stained images, bulk "
+            "RNA sequencing, spatial transcriptomics, and comprehensive clinical and treatment "
+            "records. Your primary task is to predict patient survival based on provided "
+            "medical reports."
         )
         # Get survival predictions for batch of reports
         sample_reports = [sample_report, sample_report, sample_report]  # Example with 3 identical reports

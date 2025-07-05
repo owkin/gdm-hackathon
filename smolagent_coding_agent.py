@@ -3,41 +3,59 @@ from smolagents import CodeAgent, FinalAnswerTool
 
 from gdm_hackathon.models.vertex_models import get_model
 
-# Remove the immediate evaluation call - it will be called when needed
-# results = evaluate_report_relevance_in_zero_shot(
-#     "load_histopathological_immune_infiltration_report",
-#     "load_histopathological_tumor_stroma_compartments_report",
-# )
+from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot, seed_genetic_algorithm
+
 from gdm_hackathon.tools import (
-    load_b_cell_heatmap_report,
-    load_cdk12_heatmap_report,
-    load_dc_heatmap_report,
-    load_egfr_heatmap_report,
-    load_endothelial_heatmap_report,
-    load_epithelial_heatmap_report,
-    load_erbb2_heatmap_report,
-    load_fgfr3_heatmap_report,
-    load_fibroblast_heatmap_report,
-    load_granulocyte_heatmap_report,
-    load_il1b_heatmap_report,
-    load_krt7_heatmap_report,
-    load_malignant_bladder_heatmap_report,
-    load_mast_heatmap_report,
-    load_momac_heatmap_report,
-    load_muscle_heatmap_report,
-    load_other_heatmap_report,
-    load_pik3ca_heatmap_report,
-    load_plasma_heatmap_report,
-    load_rb1_heatmap_report,
-    load_s100a8_heatmap_report,
-    load_t_nk_heatmap_report,
-    load_tp53_heatmap_report,
+load_histopathological_immune_infiltration_report,
+load_histopathological_tumor_stroma_compartments_report,
+load_histopathological_tumor_nuclear_morphometry_report,
 )
-from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot
-from gdm_hackathon.tools.hipe_report.hipe_tool import (
-    load_histopathological_immune_infiltration_report,
-    load_histopathological_tumor_nuclear_morphometry_report,
-    load_histopathological_tumor_stroma_compartments_report,
+
+from gdm_hackathon.tools import (
+load_clinical_report,
+)
+
+from gdm_hackathon.tools import (
+load_cdk12_heatmap_report, 
+load_dc_heatmap_report,
+load_b_cell_heatmap_report,
+load_egfr_heatmap_report,
+load_erbb2_heatmap_report,
+load_endothelial_heatmap_report,
+load_epithelial_heatmap_report,
+load_fgfr3_heatmap_report,
+load_fibroblast_heatmap_report,
+load_granulocyte_heatmap_report,
+load_il1b_heatmap_report,
+load_krt7_heatmap_report,
+load_malignant_bladder_heatmap_report,
+load_mast_heatmap_report,
+load_momac_heatmap_report,
+load_muscle_heatmap_report,
+load_other_heatmap_report,
+load_pik3ca_heatmap_report,
+load_plasma_heatmap_report,
+load_rb1_heatmap_report,
+load_s100a8_heatmap_report,
+load_tp53_heatmap_report,
+load_t_nk_heatmap_report,
+load_snv_indel_genomic_report,
+load_cnv_genomic_report,
+load_cna_genomic_report,
+load_gii_genomic_report,
+load_tmb_genomic_report,
+load_fgfr3_pathway_report,
+load_egfr_pathway_report,
+load_pi3k_pathway_report,
+load_anti_pd1_pathway_report,
+load_tgf_beta_pathway_report,
+load_hypoxia_pathway_report,
+load_emt_pathway_report,
+load_cell_cycle_pathway_report,
+load_ddr_deficiency_pathway_report,
+load_p53_pathway_report,
+search_pubmed,
+query_medgemma,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -53,8 +71,10 @@ coding_agent = CodeAgent(
     name="coding_agent",
     description="A coding agent that selects the best 2 tools out of 3 available tools.",
     tools=[
-        evaluate_report_relevance_in_zero_shot,  # evaluation tool
-        load_cdk12_heatmap_report,  # spatial transcriptomics heatmap tools (cell type specific)
+        evaluate_report_relevance_in_zero_shot, # evaluation tool
+        seed_genetic_algorithm, # cache analysis tool
+        # spatial transcriptomics heatmap tools (cell type  / gene expression specific)
+        load_cdk12_heatmap_report, 
         load_dc_heatmap_report,
         load_b_cell_heatmap_report,
         load_egfr_heatmap_report,
@@ -77,78 +97,151 @@ coding_agent = CodeAgent(
         load_s100a8_heatmap_report,
         load_tp53_heatmap_report,
         load_t_nk_heatmap_report,
-        load_histopathological_immune_infiltration_report,  # histopathological report family
+        # histopathological report family
+        load_histopathological_immune_infiltration_report,
         load_histopathological_tumor_stroma_compartments_report,
         load_histopathological_tumor_nuclear_morphometry_report,
+        # genomic report family
+        load_snv_indel_genomic_report,
+        load_cnv_genomic_report,
+        load_cna_genomic_report,
+        load_gii_genomic_report,
+        load_tmb_genomic_report,
+        # bulk RNAseq report family
+        load_fgfr3_pathway_report,
+        load_egfr_pathway_report,
+        load_pi3k_pathway_report,
+        load_anti_pd1_pathway_report,
+        load_tgf_beta_pathway_report,
+        load_hypoxia_pathway_report,
+        load_emt_pathway_report,
+        load_cell_cycle_pathway_report,
+        load_ddr_deficiency_pathway_report,
+        load_p53_pathway_report,
+        # clinical report
+        load_clinical_report,
+        # helper tools
+        search_pubmed,
+        query_medgemma,
+        # final answer tool
         final_answer_tool,
-    ],
-    max_steps=10,
+        ],
+    max_steps=50,  # Increased from 20 to 50
 )
 
 
 # %%
 # Function to run the coding agent
-def run_coding_agent(case_id: str = "MW_B_001"):
-    """Run the smolagent coding agent to find the best report combination for survival prediction.
+def run_coding_agent():
+    """Run the smolagent coding agent to find the best report combination for survival prediction."""
+    response = coding_agent.run(
+        r"""
+    # AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
 
-    Args:
-        case_id (str): The patient/case ID to analyze (e.g., "Case 001 - Lung Adenocarcinoma")
-    """
-    prompt = f"""
-    You are a biomedical AI coding agent tasked with finding the optimal combination of medical reports for predicting patient survival response.
+You are a biomedical AI researcher running an **evolutionary optimization** to discover the best combination of medical reports for predicting patient survival. Your goal is to intelligently evolve solutions based on deep analysis of evaluation results.
 
-    ## Available Tools:
-    You have access to several medical report tools, which can be classified into different families, depending on the modality studied in the report. Each tool provides different types of patient information:
-    1. **load_{{celltype}}_heatmap_report**: Provides information on the spatial distribution and density of a specific cell type in the tissue sample. This report is generated by a spatial transcriptomics analysis.
-    2. **load_histopathological_*_report**: Provides information from the histopathological analysis of the tissue sample. 
+## 🚀 MANDATORY FIRST STEP: Understand Current Progress
 
-    ## Your Mission:
-    Your goal is to determine which combination of 2 reports provides the best information for predicting whether a patient will respond to treatment (survival prediction).
+**BEFORE starting any optimization, you MUST first call `seed_genetic_algorithm()` to understand what has already been evaluated and learn from previous results.**
 
-    ## Evaluation Process:
-    To evaluate the quality of different report combinations, you have access to the **evaluate_report_relevance_in_zero_shot** tool. This tool is of utmost importance, and you should use it to evaluate the quality of your report combinations:
+After reviewing the cache, you may optionally use:
+- `search_pubmed()` to research relevant biomedical literature
+- `query_medgemma()` to get insights about specific tools or combinations
 
-    Namely it:
-    - Takes 2 tool names as input, which are selected from the function names of the tools you have access to.
-        Usage example: evaluate_report_relevance_in_zero_shot(tool1_name="load_cdk12_heatmap_report", tool2_name="load_dc_heatmap_report")
-    - Generates combined reports for all patients using those 2 tools
-    - Uses MedGemma (a medical AI model) to predict treatment response for each patient.
-    - Compares predictions against ground truth data
-    - Returns an accuracy score showing how well the combined reports predict treatment response
+## 🧬 Your Methodology: Evolutionary Optimization
 
-    ## Your Task:
-    1. **Investigate each tool**: First, examine what each tool returns by testing them on the specified patient, name="{case_id}" to understand the type and quality of information provided.
-    2. **Select the most promising combination**: Select the 3 most promising combination of 2 tools for survival prediction. 
-    3. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
-    4. **Iterate at most 3 times step 2 and 3**: Iterate step 2 and 3.
-    5. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
+You will find the best combination of 2 reports by evolving a **population** of candidate solutions over several **generations**.
 
-    ## Expected Output:
-    Your response should include:
-    - Accuracy scores from evaluating all 3 combinations using evaluate_report_relevance_in_zero_shot
-    - Clear recommendation of the best combination
-    - Detailed explanation of why this combination is optimal for survival prediction
+* **Report/Component**: A single report-generating tool (e.g., `load_clinical_report`).
+* **Candidate Pair**: A pair of two reports representing one candidate solution (e.g., `["load_clinical_report", "load_fgfr3_pathway_report"]`).
+* **Fitness**: A score indicating how well a **Candidate Pair** predicts survival. A good fitness score means high accuracy AND a balanced model (low False Positives/Negatives).
+* **Evolution**: Creating new, potentially better **Candidate Pairs** using techniques like **Crossover** (mixing reports from successful pairs) and **Mutation** (swapping one report to test a hypothesis).
 
-    ## Important Notes:
-    - A "full report" consists of exactly 2 sub-reports combined
-    - The goal is to maximize the accuracy of treatment response prediction
-    - Do not evaluate more than 3 combinaisons at one! It is important to evaluate the combinaisons in a systematic way.
-    - Think of this optimization as a genetic algorithm, where you are trying to find the best combination of 2 tools for survival prediction.
-    - The evaluation tool uses real patient data and MedGemma predictions, so the results are meaningful
+---
 
-    Start by investigating each tool, then optimize in a genetic way the combinations to find the optimal pair for survival prediction. 
-    You can use the final_answer_tool to provide your final answer.
+## 🛠️ Available Tools & Evaluation
 
-    Your first output should be a test:
+* **Report Tools**: You have access to Spatial, Histopathological, Clinical, Pathway, and Genomic report tools.
+* **Evaluation Tool**: `evaluate_report_relevance_in_zero_shot(tool1_name: str, tool2_name: str)`. This is your fitness function. It returns a detailed report including accuracy, a confusion matrix, and reasoning for example predictions.
 
-    Thought: I will proceed step by step and test the tool load_cdk12_heatmap_report on {case_id}. 
-    <code>
-    print(load_cdk12_heatmap_report("{case_id}"))
-    print(load_histopathological_immune_infiltration_report("{case_id}"))
-    </code>
+---
 
-    Let begin ! 
-    """
+## 🧠 The Evolutionary Workflow (Your Task)
+
+You have a budget of **~10 generations** (with a population size of 3-5 per generation).
+
+1.  **Generation 1 (Initialization)**: Create an initial population of 3-4 diverse **Candidate Pairs**. Choose components from different families to broadly survey the landscape. Evaluate this entire population.
+
+2.  **Analyze & Strategize (THE MOST IMPORTANT STEP)**: For each result in the generation, you must **look beyond the accuracy score**. Analyze the full evaluation output, especially the **Confusion Matrix** and the **Reasoning** for incorrect predictions (False Positives/Negatives).
+
+3.  **Generation 2+ (Evolve)**: Based on your analysis, create the next generation's population using **Elitism**, **Crossover**, and **Informed Mutation**.
+
+4.  **Repeat**: Repeat steps 2 and 3 for each generation, continuously refining your population of **Candidate Pairs**.
+
+5.  **Final Recommendation**: Once you have a clear winner that is both accurate and balanced, use the `final_answer_tool` to submit your answer.
+
+---
+
+## 📝 Example of a Full Generation Cycle
+
+This is what your thought process should look like after an evaluation.
+
+**Situation**: You have just received the results for your 3 **Candidate Pairs** in Generation 1.
+
+* **Pair 1**: `("load_clinical_report", "load_fgfr3_pathway_report")` -> **Accuracy: 65%**, Balanced (FP: 3, FN: 2).
+* **Pair 2**: `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")` -> **Accuracy: 78%**, but Unbalanced (FP: 1, **FN: 6**).
+* **Pair 3**: `("load_tmb_genomic_report", "load_emt_pathway_report")` -> **Accuracy: 55%**, Unbalanced (**FP: 7**, FN: 1).
+
+**Your Thought Process should look like this:**
+
+Start of the example:
+
+Thought: The results for Generation 1 are in.
+
+**1. Analysis:**
+* Pair 2 has the highest accuracy (78%), but the confusion matrix shows it is too pessimistic, with 6 False Negatives. The reasoning for these FNs likely shows that even with strong immune signals, the model defaults to "Below Median" because it's missing context on tumor aggressiveness.
+* Pair 1 is less accurate (65%) but much more balanced. This is a stable, but weaker, candidate.
+* Pair 3 performed poorly and was too optimistic. I will discard this one.
+
+**2. Strategy for Generation 2:**
+My goal is to improve upon the high accuracy of Pair 2 while fixing its pessimistic bias.
+
+* **(Elitism)**: I will keep the best pair, `("load_histopathological_immune_infiltration_report", "load_cdk12_heatmap_report")`, in the next generation to ensure I don't lose my best result.
+* **(Informed Mutation)**: My hypothesis is that Pair 2 needs tumor context to be less pessimistic. I will **mutate** it by swapping one component for a report on tumor characteristics. I'll test `("load_histopathological_immune_infiltration_report", "load_histopathological_grade_report")`. This tests if adding tumor grade can correct the False Negatives.
+* **(Crossover)**: I will create a new pair by **crossing over** the best components from my top two pairs. `load_histopathological_immune_infiltration_report` was the strongest component from the most accurate pair, and `load_clinical_report` was from the most balanced pair. This leads to the new candidate: `("load_histopathological_immune_infiltration_report", "load_clinical_report")`.
+
+**3. Plan for Generation 2 Evaluation:**
+
+Based on my strategy, the new population of 3 Candidate Pairs is ready. I will now evaluate them.
+
+**Generation 2 Evaluation Plan**
+
+<code>
+# Elite Pair (from previous generation)
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_cdk12_heatmap_report"))
+# Mutated Pair
+print(evaluate_report_relevance_in_zero_shot(tool1_name="load_histopathological_immune_infiltration_report", tool2_name="load_clinical_report"))
+</code>
+
+End of the example.
+
+## Your First Output
+
+Thought: I must first understand the current state of the optimization by calling `seed_genetic_algorithm()` to see what combinations have already been evaluated. This will help me learn from previous results and avoid repeating evaluations.
+
+<code>
+# MANDATORY FIRST STEP: Understand current progress
+print(seed_genetic_algorithm())
+</code>
+
+Based on the cache analysis, I will then design my evolutionary optimization strategy and begin evaluating new combinations.
+
+## End of example
+
+Very important use <code> </code> tags and not python or tool code or any other format
+
+Let's begin the optimization !
+"""
 
     response = coding_agent.run(prompt)
     return response
