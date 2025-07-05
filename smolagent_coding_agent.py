@@ -88,7 +88,7 @@ coding_agent = CodeAgent(
 
 # %%
 # Function to run the coding agent
-def run_coding_agent(case_id: str = "Case 001 - Lung Adenocarcinoma"):
+def run_coding_agent(case_id: str = "MW_B_001"):
     """Run the smolagent coding agent to find the best report combination for survival prediction.
 
     Args:
