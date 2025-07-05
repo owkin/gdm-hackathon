@@ -1,5 +1,7 @@
 # Local Database API
 
+**Note**: this is not used in the current state of the code.
+
 A simple local database that stores data in JSON format with a heap queue for accuracy-based sorting. The database is exposed as a REST API for easy integration with other scripts.
 
 ## Features
