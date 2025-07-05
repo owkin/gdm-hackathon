@@ -12,7 +12,7 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import gradio as gr
 
-from genetic_algo_code_agent import coding_agent
+from genetic_algo_code_agent import create_coding_agent
 
 
 def filter_trace_output(output_text):
@@ -133,7 +133,7 @@ def chat_with_agent(message, history, show_full_trace=True):
 
         with redirect_stdout(output_buffer), redirect_stderr(error_buffer):
             # Get response from the coding agent
-            response = coding_agent.run(message)
+            response = create_coding_agent().run(message)
 
         # Get the captured output
         captured_output = output_buffer.getvalue()
