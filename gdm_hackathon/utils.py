@@ -30,6 +30,9 @@ def convert_to_ch_id(patient_id: str) -> str:
 
 def convert_to_mw_id(patient_id: str) -> str:
     """Convert the patient ID to the MW ID format."""
+    if patient_id.endswith("a"):
+        patient_id = patient_id[:-1]
+
     mapping = {
         "CH_B_030": "MW_B_001",
         "CH_B_033": "MW_B_002",

@@ -554,9 +554,7 @@ def _load_heatmap_description(patient_id: str, feature: str) -> str:
         The content of the heatmap report as a string
     """
     if patient_id == "test_patient":
-        patient_id = "CH_B_030"
-    else:
-        patient_id = convert_to_ch_id(patient_id)
+        patient_id = "MW_B_001"
     
     try:
         # Initialize GCS filesystem

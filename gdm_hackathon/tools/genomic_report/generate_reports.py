@@ -12,40 +12,10 @@ import json
 import requests
 from datetime import datetime
 from gdm_hackathon.config import GCP_PROJECT_ID
-from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url, MODELS_DICT
+from gdm_hackathon.models.vertex_models import get_access_token, get_endpoint_url, ENDPOINT_MODELS_DICT
+from gdm_hackathon.utils import convert_to_mw_id
 
 MODEL = "medgemma-27b"
-
-# Patient ID mapping from original IDs to new IDs
-PATIENT_MAPPING = {
-    "CH_B_030a": "MW_B_001a",
-    "CH_B_033a": "MW_B_002a",
-    "CH_B_037a": "MW_B_003a",
-    "CH_B_041a": "MW_B_014a",
-    "CH_B_046a": "MW_B_004a",
-    "CH_B_059a": "MW_B_005a",
-    "CH_B_062a": "MW_B_006a",
-    "CH_B_064a": "MW_B_007a",
-    "CH_B_068a": "MW_B_008a",
-    "CH_B_069a": "MW_B_009a",
-    "CH_B_073a": "MW_B_015a",
-    "CH_B_074a": "MW_B_010a",
-    "CH_B_075a": "MW_B_011a",
-    "CH_B_079a": "MW_B_012a",
-    "CH_B_087a": "MW_B_013a",
-}
-
-def get_mapped_patient_id(original_patient_id: str) -> str:
-    """
-    Get the mapped patient ID from the original patient ID.
-    
-    Args:
-        original_patient_id: The original patient ID (e.g., 'CH_B_030a')
-        
-    Returns:
-        The mapped patient ID (e.g., 'MW_B_001a')
-    """
-    return PATIENT_MAPPING.get(original_patient_id, original_patient_id)
 
 def generate_genomic_summary(patient_id: str, data_type: str, mutated_genes: list) -> str:
     """
@@ -63,43 +33,49 @@ def generate_genomic_summary(patient_id: str, data_type: str, mutated_genes: lis
         # Create a prompt for the genomic analysis
         if data_type in ["snv_indel", "cnv", "cna"]:
             prompt = f"""
-            You are a medical AI assistant analyzing genomic data for medical research and patient outcome prediction.
-            
-            I am providing you with genomic data for a bladder cancer patient:
-            - Data type: {data_type.upper()}
-            - Number of affected genes: {len(mutated_genes)}
-            - Affected genes: {', '.join(mutated_genes)}
-            
-            Please provide a detailed medical analysis including:
-            1. Overall genomic profile assessment for this patient
-            2. Key genes and their potential clinical significance
-            3. Potential implications for treatment and prognosis
-            4. Any notable patterns or unusual findings
-            5. Recommendations for further analysis or clinical considerations
-            
-            Focus on providing actionable medical insights that would be useful for clinicians.
-            Use medical terminology appropriately and explain complex concepts clearly.
-            """
+You are a medical AI assistant analyzing genomic data for medical research and patient outcome prediction.
+
+I am providing you with genomic data for a bladder cancer patient:
+- Data type: {data_type.upper()}
+- Number of affected genes: {len(mutated_genes)}
+- Affected genes: {', '.join(mutated_genes)}
+
+Please provide a detailed medical analysis including:
+1. Overall genomic profile assessment for this patient
+2. Key genes and their potential clinical significance
+3. Potential implications for treatment and prognosis
+4. Any notable patterns or unusual findings
+5. Recommendations for further analysis or clinical considerations
+
+Focus on providing concise and actionable medical insights that would be useful for clinicians.
+Use medical terminology appropriately and explain complex concepts clearly.
+
+
+IMPORTANT: Start directly with the analysis. Do not include any introductory phrases like "Okay," "I'll analyze," or similar pleasantries. Do not include any disclaimers at the end. Provide only the medical analysis.
+"""
         elif data_type in ["gii", "tmb"]:
             # For score-based data types, the mutated_genes list contains the sentence
             score_info = mutated_genes[0] if mutated_genes else "No score available"
             prompt = f"""
-            You are a medical AI assistant analyzing genomic scores for medical research and patient outcome prediction.
-            
-            I am providing you with genomic score data for a bladder cancer patient:
-            - Data type: {data_type.upper()}
-            - Score information: {score_info}
-            
-            Please provide a detailed medical analysis including:
-            1. Interpretation of this {data_type.upper()} score in clinical context
-            2. What this score indicates about the patient's genomic profile
-            3. Potential implications for treatment decisions
-            4. Prognostic significance of this score
-            5. Recommendations for clinical management based on this score
-            
-            Focus on providing actionable medical insights that would be useful for clinicians.
-            Use medical terminology appropriately and explain the clinical relevance of this score.
-            """
+You are a medical AI assistant analyzing genomic scores for medical research and patient outcome prediction.
+
+I am providing you with genomic score data for a bladder cancer patient:
+- Data type: {data_type.upper()}
+- Score information: {score_info}
+
+Please provide a detailed medical analysis including:
+1. Interpretation of this {data_type.upper()} score in clinical context
+2. What this score indicates about the patient's genomic profile
+3. Potential implications for treatment decisions
+4. Prognostic significance of this score
+5. Recommendations for clinical management based on this score
+
+Focus on providing concise and actionable medical insights that would be useful for clinicians.
+Use medical terminology appropriately and explain the clinical relevance of this score.
+
+
+IMPORTANT: Start directly with the analysis. Do not include any introductory phrases like "Okay," "I'll analyze," or similar pleasantries. Do not include any disclaimers at the end. Provide only the medical analysis.
+"""
         else:
             return f"Error: Unknown data type {data_type}"
         
@@ -113,7 +89,7 @@ def generate_genomic_summary(patient_id: str, data_type: str, mutated_genes: lis
         }
         
         payload = {
-            "model": MODELS_DICT[MODEL]["model_id"],
+            "model": ENDPOINT_MODELS_DICT[MODEL]["model_id"],
             "messages": [
                 {
                     "role": "user",
@@ -133,6 +109,11 @@ def generate_genomic_summary(patient_id: str, data_type: str, mutated_genes: lis
         if response.status_code == 200:
             result = response.json()
             summary = result["choices"][0]["message"]["content"]
+            
+            # Replace the CH patient ID with the MW patient ID
+            patient_id_pattern = re.compile(r'CH_B_\d+a')
+            summary = patient_id_pattern.sub(convert_to_mw_id(patient_id), summary)
+
             return summary
         else:
             return f"Error: API call failed with status {response.status_code}: {response.text}"
@@ -191,7 +172,7 @@ def save_genomic_description_to_bucket(patient_id: str, data_type: str, summary:
         bucket_name = "gdm-hackathon"
         
         # Get the mapped patient ID
-        mapped_patient_id = get_mapped_patient_id(patient_id)
+        mapped_patient_id = convert_to_mw_id(patient_id)
         
         # Create the description data structure
         description_data = {
