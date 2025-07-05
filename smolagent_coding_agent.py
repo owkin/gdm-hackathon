@@ -231,17 +231,11 @@ Thought: I must first understand the current state of the optimization by callin
 print(seed_genetic_algorithm())
 </code>
 
-After reviewing the cache results, I may optionally research relevant literature or get insights about specific tools:
-
-<code>
-# OPTIONAL: Research relevant literature
-# print(search_pubmed("bladder cancer survival prediction biomarkers"))
-
-# OPTIONAL: Get insights about specific tools
-# print(query_medgemma("What are the key differences between histopathological immune infiltration reports and spatial transcriptomics heatmaps for survival prediction?"))
-</code>
-
 Based on the cache analysis, I will then design my evolutionary optimization strategy and begin evaluating new combinations.
+
+## End of example
+
+Very important use <code> </code> tags and not python or tool code or any other format
 
 Let's begin the optimization !
 """
