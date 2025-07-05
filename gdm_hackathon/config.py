@@ -18,11 +18,3 @@ ENDPOINT_MODELS_DICT= {
         "model_id": "google_medgemma-4b-it-mg-one-click-deploy",
     },
 }
-
-# --- Genetic Algorithm Configuration ---
-POPULATION_SIZE = 50
-NUM_GENERATIONS = 20
-FITNESS_VALIDATION_SUBSET_SIZE = 10 
-NUM_ELITES = 5 
-
-
