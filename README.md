@@ -5,9 +5,10 @@
 
 Extract interpertable and predictive signal from multi-modal data.
 
+![Workflow](workflow.png)
 
 
-# Set up
+## Set up
 
 - Download the gcloud cli https://cloud.google.com/sdk/docs/install-sdk
 - Set the project and authenticate (with your hackathon account)
@@ -19,6 +20,16 @@ gcloud auth login
 This way you should be able to push data to our bucket:
 ```bash
 gsutil cp test gs://gdm-hackathon/test
+```
+
+## Quickstart
+
+To spawn a local version of the chatbot, run:
+
+```python
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync 
+gradio run_chatbot.py
 ```
 
 ## Spawn a VM on GCP
@@ -44,47 +55,97 @@ Click Create. It will take a few minutes to provision.
 
 You can then connect to the VM via ssh.
 
-## Hackathon To-Do List
+## Available tools 
 
-### 1. Environment & Setup (`uv`, GCP)
+The GDM Hackathon project provides a comprehensive suite of tools for biomarker discovery and multi-modal data analysis. These tools are designed to extract interpretable and predictive signals from various types of medical data.
 
--   **[✅] Init Project:** Clone the repo. Everyone gets access to the GCP project.
--   **[ ] Install Deps:** We're using `uv`. Create a `pyproject.toml` or `requirements.txt` and install dependencies.
-    ```bash
-    # Install uv first if you haven't
-    pip install uv
-    
-    # Create a virtual environment and install deps
-    uv venv
-    source .venv/bin/activate
-    uv pip install -r requirements.txt # (e.g., google-cloud-aiplatform, pandas, tqdm)
-    ```
--   **[ ] Deploy/Access Models:** The models are foundation endpoints on Vertex AI / Gemini.
+### Key Features
 
-### 2. Data Wrangling
+1. **Multi-modal Analysis**: Combines clinical, genomic, transcriptomic, and histopathological data
+2. **AI-Powered Insights**: Uses MedGemma 27B for sophisticated medical analysis
+3. **Survival Prediction**: Focused on predicting patient survival outcomes
+4. **Tool Combination Optimization**: Genetic algorithm approach to find optimal tool combinations
+5. **Scalable Architecture**: Cloud-based storage and computation
+6. **Comprehensive Evaluation**: Multiple metrics for assessing prediction accuracy
 
--   **[ ] Create Data Manifest?:** Yaml file with all data files for each patient. Multiple modalities per patient.
--   **[ ] Build Data Loader:** Write a Python function `get_patient_data(patient_id)` that reads the manifest and loads all data for one patient into a structured object or dictionary.
+The tools are specifically designed for bladder cancer biomarker discovery but can be adapted for other cancer types by modifying the data sources and analysis parameters.
 
-### 3. The Core Engine
+### Core Analysis Tools
 
-![image](workflow.png)
+#### 1. **Clinical Tool** (`clinical_tool.py`)
 
--   **[ ] Each branch on the left is an agent from data loading to text description:** If the data is computed separately, the agent is a simple loading function. Each agent may call python functions or API endpoints. All agents should cache the results.
-    -   **[ ] HIPE reports:** Either load the report, or call the text description model from the aggregated results csv.
-    -   **[ ] Mpp4 Image description:** Cut the image, set the correct resolution, call multimodal model.
-    -   **[ ] Spt RNA-seq:** Load the spatial rna-seq, aggregate to patient-level, call text description model.
-    -   **[ ] Spatialized exression data:** Load the spatial rnas-seq, plot the gene expression heatmap, call multimodal model.
-    -   **[ ] Clinical notes:** Load the clinical data, call text description model.
--   **[ ] Genetic algorithm loop:** Call the agents, aggregate the results, call the fitness model.
-    -   **[ ] Orchestrator description model:** Merge the text descriptions into a single text prompt.
-    -   **[ ] Predictor model:** Call the predictor model with the prompt and the orchestrator description.
-    -   **[ ] Fitness model:** Compute c-index / accuracy of the predictor model.
+- **Purpose**: Loads clinical report data from Google Cloud Storage
+- **Function**: `load_clinical_report(patient_id)`
+- **Data**: Patient demographics, smoking status, histological subtype, cancer stage, medications, radiotherapy history
+- **Use Case**: Provides baseline clinical context for survival prediction
 
+#### 2. **PubMed Tool** (`pubmed_tool.py`)
 
-We may optimize on the tool call of the orchestrator model.
+- **Purpose**: Searches PubMed for scientific literature
+- **Function**: `search_pubmed(query, max_results=3)`
+- **Features**: Returns PMID, title, authors, journal, publication date, and abstract
+- **Use Case**: Essential for literature review before selecting report combinations for survival prediction
 
-### 4. 
+#### 3. **MedGemma Tool** (`medgemma_tool.py`)
 
--   **[ ] Frontend?** Build a simple frontend to visualize the result from multimodal data to clinical endpoint prediction
--   **[ ] Target discovery?** Use TxGemma to discover targets from the description.
+- **Purpose**: Queries the MedGemma 27B model for biomedical analysis
+- **Function**: `query_medgemma(prompt, max_tokens=2048, temperature=0.0)`
+- **Capabilities**: Analyzes medical reports, predicts survival outcomes, provides medical insights
+- **Use Case**: AI-powered analysis of medical data for survival prediction
+
+#### 4. **Evaluation Tool** (`evaluation_tool.py`)
+
+- **Purpose**: Evaluates tool combinations for survival prediction accuracy
+- **Functions**: 
+  - `evaluate_report_relevance_in_zero_shot(tool1_name, tool2_name)`
+  - `seed_genetic_algorithm()`
+- **Metrics**: Accuracy, precision, recall, specificity
+- **Use Case**: Determines which tool combinations provide the best survival prediction performance
+
+### Specialized Report Tools
+
+#### 5. **Heatmap Report Tools** (`heatmap_report/`)
+
+- **Purpose**: Analyzes medical heatmap images using MedGemma 4B
+- **Available Reports**: 24 different heatmap reports including:
+  - Gene-specific: CDK12, EGFR, ERBB2, FGFR3, PIK3CA, RB1, TP53
+  - Cell type-specific: B-cell, endothelial, epithelial, fibroblast, granulocyte, mast, muscle, plasma, T/NK
+  - Feature-specific: IL1B, KRT7, S100A8, malignant bladder, MOMAC
+- **Technology**: Uses gemma-3-27b multimodal model for image analysis
+- **Use Case**: Spatial analysis of gene expression and cell type distributions
+
+#### 6. **Genomic Report Tools** (`genomic_report/`)
+
+- **Purpose**: Analyzes genomic data for survival prediction
+- **Available Reports**:
+  - `load_snv_indel_genomic_report` - Single nucleotide variants and insertions/deletions
+  - `load_cnv_genomic_report` - Copy number variations
+  - `load_cna_genomic_report` - Copy number alterations
+  - `load_gii_genomic_report` - Genomic instability index
+  - `load_tmb_genomic_report` - Tumor mutational burden
+- **Use Case**: Genomic biomarker discovery and analysis
+
+#### 7. **Bulk RNA-seq Pathway Tools** (`bulk_rnaseq/`)
+
+- **Purpose**: Analyzes bulk RNA sequencing data for pathway activity
+- **Available Reports**:
+  - `load_fgfr3_pathway_report` - FGFR3 pathway analysis
+  - `load_egfr_pathway_report` - EGFR pathway analysis
+  - `load_pi3k_pathway_report` - PI3K pathway analysis
+  - `load_anti_pd1_pathway_report` - Anti-PD1 pathway analysis
+  - `load_tgf_beta_pathway_report` - TGF-beta pathway analysis
+  - `load_hypoxia_pathway_report` - Hypoxia pathway analysis
+  - `load_emt_pathway_report` - Epithelial-mesenchymal transition
+  - `load_cell_cycle_pathway_report` - Cell cycle pathway analysis
+  - `load_ddr_deficiency_pathway_report` - DNA damage response deficiency
+  - `load_p53_pathway_report` - P53 pathway analysis
+- **Use Case**: Pathway-level analysis of gene expression data
+
+#### 8. **HIPE Report Tools** (`hipe_report/`)
+
+- **Purpose**: Analyzes histopathological immune infiltration patterns
+- **Available Reports**:
+  - `load_histopathological_immune_infiltration_report` - Immune cell infiltration analysis
+  - `load_histopathological_tumor_stroma_compartments_report` - Tumor-stroma compartment analysis
+  - `load_histopathological_tumor_nuclear_morphometry_report` - Nuclear morphometry analysis
+- **Use Case**: Histopathological analysis of tissue samples
