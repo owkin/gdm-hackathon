@@ -8,11 +8,15 @@ version = "0.1.0"
 description = "Biomarker discovery using genetic algorithm and Vertex AI"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
-authors = [
-    {name = "GDM Hackathon Team"}
+license = { text = "MIT" }
+authors = [{ name = "GDM Hackathon Team" }]
+keywords = [
+    "biomarker",
+    "genetic-algorithm",
+    "vertex-ai",
+    "gemini",
+    "healthcare",
 ]
-keywords = ["biomarker", "genetic-algorithm", "vertex-ai", "gemini", "healthcare"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
@@ -37,41 +41,31 @@ dependencies = [
     "gcsfs>=2023.0.0",
     "ipykernel>=6.29.5",
     "openai>=1.93.0",
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "black>=22.0.0",
-    "flake8>=4.0.0",
-    "mypy>=0.950",
-]
-viz = [
-    "matplotlib>=3.5.0",
-    "seaborn>=0.11.0",
-    "plotly>=5.0.0",
-]
-image = [
-    "pillow>=8.3.0",
-    "opencv-python>=4.5.0",
-]
-data_prep = [
-    "owkin-engine-features[prior_knowledge,survival,dea,transforms,optim,spt,sc]>=0.5.0",
-    "owkin-data-loader>=0.1.15",
-]
+dev = ["pytest>=7.0.0", "black>=22.0.0", "flake8>=4.0.0", "mypy>=0.950"]
+viz = ["matplotlib>=3.5.0", "seaborn>=0.11.0", "plotly>=5.0.0"]
+image = ["pillow>=8.3.0", "opencv-python>=4.5.0"]
+# data_prep = [
+#     "owkin-engine-features[prior_knowledge,survival,dea,transforms,optim,spt,sc]>=0.5.0",
+#     "owkin-data-loader>=0.1.15",
+# ]
 
-[[tool.uv.index]]
-name = "codeartifact"
-url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/"
-explicit = false
+# [[tool.uv.index]]
+# name = "codeartifact"
+# url = "https://abstra-058264397262.d.codeartifact.eu-west-1.amazonaws.com/pypi/owkin-pypi/simple/"
+# explicit = false
 
-[tool.uv.sources]
-owkin-data-loader = { index = "codeartifact" }
-owkin-engine-features = { index= "codeartifact" }
+# [tool.uv.sources]
+# owkin-data-loader = { index = "codeartifact" }
+# owkin-engine-features = { index = "codeartifact" }
 
 
-[project.scripts]
-gdm-evolve = "evolve:main"
+# [project.scripts]
+# gdm-evolve = "evolve:main"
 
 [project.urls]
 Homepage = "https://github.com/your-org/gdm-hackathon"
@@ -126,4 +120,4 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short" 
+addopts = "-v --tb=short"

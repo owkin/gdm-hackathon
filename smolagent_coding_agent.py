@@ -1,39 +1,43 @@
 # %%
 from smolagents import CodeAgent, FinalAnswerTool
+
 from gdm_hackathon.models.vertex_models import get_model
 
-from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot
-
-from gdm_hackathon.tools.hipe_report.hipe_tool import (
-load_histopathological_immune_infiltration_report,
-load_histopathological_tumor_stroma_compartments_report,
-load_histopathological_tumor_nuclear_morphometry_report,
-)
-results = evaluate_report_relevance_in_zero_shot('load_histopathological_immune_infiltration_report', 'load_histopathological_tumor_stroma_compartments_report')
+# Remove the immediate evaluation call - it will be called when needed
+# results = evaluate_report_relevance_in_zero_shot(
+#     "load_histopathological_immune_infiltration_report",
+#     "load_histopathological_tumor_stroma_compartments_report",
+# )
 from gdm_hackathon.tools import (
-load_cdk12_heatmap_report, 
-load_dc_heatmap_report,
-load_b_cell_heatmap_report,
-load_egfr_heatmap_report,
-load_erbb2_heatmap_report,
-load_endothelial_heatmap_report,
-load_epithelial_heatmap_report,
-load_fgfr3_heatmap_report,
-load_fibroblast_heatmap_report,
-load_granulocyte_heatmap_report,
-load_il1b_heatmap_report,
-load_krt7_heatmap_report,
-load_malignant_bladder_heatmap_report,
-load_mast_heatmap_report,
-load_momac_heatmap_report,
-load_muscle_heatmap_report,
-load_other_heatmap_report,
-load_pik3ca_heatmap_report,
-load_plasma_heatmap_report,
-load_rb1_heatmap_report,
-load_s100a8_heatmap_report,
-load_tp53_heatmap_report,
-load_t_nk_heatmap_report,
+    load_b_cell_heatmap_report,
+    load_cdk12_heatmap_report,
+    load_dc_heatmap_report,
+    load_egfr_heatmap_report,
+    load_endothelial_heatmap_report,
+    load_epithelial_heatmap_report,
+    load_erbb2_heatmap_report,
+    load_fgfr3_heatmap_report,
+    load_fibroblast_heatmap_report,
+    load_granulocyte_heatmap_report,
+    load_il1b_heatmap_report,
+    load_krt7_heatmap_report,
+    load_malignant_bladder_heatmap_report,
+    load_mast_heatmap_report,
+    load_momac_heatmap_report,
+    load_muscle_heatmap_report,
+    load_other_heatmap_report,
+    load_pik3ca_heatmap_report,
+    load_plasma_heatmap_report,
+    load_rb1_heatmap_report,
+    load_s100a8_heatmap_report,
+    load_t_nk_heatmap_report,
+    load_tp53_heatmap_report,
+)
+from gdm_hackathon.tools.evaluation_tool import evaluate_report_relevance_in_zero_shot
+from gdm_hackathon.tools.hipe_report.hipe_tool import (
+    load_histopathological_immune_infiltration_report,
+    load_histopathological_tumor_nuclear_morphometry_report,
+    load_histopathological_tumor_stroma_compartments_report,
 )
 
 final_answer_tool = FinalAnswerTool()
@@ -48,47 +52,54 @@ coding_agent = CodeAgent(
     model=model,
     name="coding_agent",
     description="A coding agent that selects the best 2 tools out of 3 available tools.",
-    tools=[evaluate_report_relevance_in_zero_shot, # evaluation tool
-load_cdk12_heatmap_report,  # spatial transcriptomics heatmap tools (cell type specific)
-load_dc_heatmap_report,
-load_b_cell_heatmap_report,
-load_egfr_heatmap_report,
-load_erbb2_heatmap_report,
-load_endothelial_heatmap_report,
-load_epithelial_heatmap_report,
-load_fgfr3_heatmap_report,
-load_fibroblast_heatmap_report,
-load_granulocyte_heatmap_report,
-load_il1b_heatmap_report,
-load_krt7_heatmap_report,
-load_malignant_bladder_heatmap_report,
-load_mast_heatmap_report,
-load_momac_heatmap_report,
-load_muscle_heatmap_report,
-load_other_heatmap_report,
-load_pik3ca_heatmap_report,
-load_plasma_heatmap_report,
-load_rb1_heatmap_report,
-load_s100a8_heatmap_report,
-load_tp53_heatmap_report,
-load_t_nk_heatmap_report,
-load_histopathological_immune_infiltration_report, # histopathological report family
-load_histopathological_tumor_stroma_compartments_report,
-load_histopathological_tumor_nuclear_morphometry_report,
-final_answer_tool,],
+    tools=[
+        evaluate_report_relevance_in_zero_shot,  # evaluation tool
+        load_cdk12_heatmap_report,  # spatial transcriptomics heatmap tools (cell type specific)
+        load_dc_heatmap_report,
+        load_b_cell_heatmap_report,
+        load_egfr_heatmap_report,
+        load_erbb2_heatmap_report,
+        load_endothelial_heatmap_report,
+        load_epithelial_heatmap_report,
+        load_fgfr3_heatmap_report,
+        load_fibroblast_heatmap_report,
+        load_granulocyte_heatmap_report,
+        load_il1b_heatmap_report,
+        load_krt7_heatmap_report,
+        load_malignant_bladder_heatmap_report,
+        load_mast_heatmap_report,
+        load_momac_heatmap_report,
+        load_muscle_heatmap_report,
+        load_other_heatmap_report,
+        load_pik3ca_heatmap_report,
+        load_plasma_heatmap_report,
+        load_rb1_heatmap_report,
+        load_s100a8_heatmap_report,
+        load_tp53_heatmap_report,
+        load_t_nk_heatmap_report,
+        load_histopathological_immune_infiltration_report,  # histopathological report family
+        load_histopathological_tumor_stroma_compartments_report,
+        load_histopathological_tumor_nuclear_morphometry_report,
+        final_answer_tool,
+    ],
     max_steps=10,
 )
+
+
 # %%
 # Function to run the coding agent
-def run_coding_agent():
-    """Run the smolagent coding agent to find the best report combination for survival prediction."""
-    response = coding_agent.run(
-        r"""
+def run_coding_agent(case_id: str = "Case 001 - Lung Adenocarcinoma"):
+    """Run the smolagent coding agent to find the best report combination for survival prediction.
+
+    Args:
+        case_id (str): The patient/case ID to analyze (e.g., "Case 001 - Lung Adenocarcinoma")
+    """
+    prompt = f"""
     You are a biomedical AI coding agent tasked with finding the optimal combination of medical reports for predicting patient survival response.
 
     ## Available Tools:
     You have access to several medical report tools, which can be classified into different families, depending on the modality studied in the report. Each tool provides different types of patient information:
-    1. **load_{celltype}_heatmap_report**: Provides information on the spatial distribution and density of a specific cell type in the tissue sample. This report is generated by a spatial transcriptomics analysis.
+    1. **load_{{celltype}}_heatmap_report**: Provides information on the spatial distribution and density of a specific cell type in the tissue sample. This report is generated by a spatial transcriptomics analysis.
     2. **load_histopathological_*_report**: Provides information from the histopathological analysis of the tissue sample. 
 
     ## Your Mission:
@@ -106,14 +117,14 @@ def run_coding_agent():
     - Returns an accuracy score showing how well the combined reports predict treatment response
 
     ## Your Task:
-    1. **Investigate each tool**: First, examine what each tool returns by testing them on a test patient, name="test_patient" to understand the type and quality of information provided.
+    1. **Investigate each tool**: First, examine what each tool returns by testing them on the specified patient, name="{case_id}" to understand the type and quality of information provided.
     2. **Select the most promising combination**: Select the 3 most promising combination of 2 tools for survival prediction. 
     3. **Evaluate the resulting accuracy**: Evaluate the resulting accuracy of the 3 selected combination of 2 tools for survival prediction.
     4. **Iterate at most 3 times step 2 and 3**: Iterate step 2 and 3.
     5. **Provide recommendation**: Based on your analysis, recommend the best combination of 2 tools for survival prediction and explain your reasoning.
 
     ## Expected Output:
-    Your response should include:1"
+    Your response should include:
     - Accuracy scores from evaluating all 3 combinations using evaluate_report_relevance_in_zero_shot
     - Clear recommendation of the best combination
     - Detailed explanation of why this combination is optimal for survival prediction
@@ -130,19 +141,20 @@ def run_coding_agent():
 
     Your first output should be a test:
 
-    Thought: I will proceed step by step and test the tool load_cdk12_heatmap_report on test_patient. 
+    Thought: I will proceed step by step and test the tool load_cdk12_heatmap_report on {case_id}. 
     <code>
-    print(load_cdk12_heatmap_report("test_patient"))
-    print(load_histopathological_immune_infiltration_report("test_patient"))
+    print(load_cdk12_heatmap_report("{case_id}"))
+    print(load_histopathological_immune_infiltration_report("{case_id}"))
     </code>
 
     Let begin ! 
     """
 
-    )
+    response = coding_agent.run(prompt)
     return response
+
 
 if __name__ == "__main__":
     result = run_coding_agent()
-    print(result) 
+    print(result)
 # %%

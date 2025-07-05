@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Check, Loader2 } from 'lucide-react';
+import { useAnalysis } from '@/hooks/useAnalysis';
 
 interface AnalysisStep {
   id: number;
@@ -102,11 +103,10 @@ const AnalysisStepItem: React.FC<{ step: AnalysisStep; isVisible: boolean }> = (
         )}
       </div>
       <div className="flex-1">
-        <p className={`text-sm font-medium ${
-          step.status === 'completed' ? 'text-foreground' : 
-          step.status === 'running' ? 'text-primary' : 
-          'text-muted-foreground'
-        }`}>
+        <p className={`text-sm font-medium ${step.status === 'completed' ? 'text-foreground' :
+          step.status === 'running' ? 'text-primary' :
+            'text-muted-foreground'
+          }`}>
           {step.title}
         </p>
       </div>
@@ -158,14 +158,57 @@ export const MedicalReportInterface: React.FC = () => {
   const [analysisSteps, setAnalysisSteps] = useState<AnalysisStep[]>(ANALYSIS_STEPS);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [showReport, setShowReport] = useState(false);
+  const [availableCases, setAvailableCases] = useState<string[]>(MOCK_CASES);
+  const [reportContent, setReportContent] = useState<string>('');
 
-  const startAnalysis = () => {
+  const { startAnalysis: startAnalysisAPI, pollTaskStatus, getAvailableCases, error } = useAnalysis();
+
+  // Load available cases on component mount
+  useEffect(() => {
+    const loadCases = async () => {
+      try {
+        const cases = await getAvailableCases();
+        if (cases.length > 0) {
+          setAvailableCases(cases);
+        }
+      } catch (err) {
+        console.error('Failed to load cases:', err);
+      }
+    };
+    loadCases();
+  }, [getAvailableCases]);
+
+  const startAnalysis = async () => {
+    if (!selectedCase) return;
+
     setIsAnalyzing(true);
     setCurrentStepIndex(0);
     setShowReport(false);
-    
+    setReportContent('');
+
     // Reset all steps
     setAnalysisSteps(ANALYSIS_STEPS.map(step => ({ ...step, status: 'pending' })));
+
+    try {
+      // Start the analysis via API
+      const response = await startAnalysisAPI(selectedCase);
+
+      // Poll for status updates
+      pollTaskStatus(response.task_id, (finalStatus) => {
+        setIsAnalyzing(false);
+        if (finalStatus.status === 'completed' && finalStatus.result) {
+          setReportContent(finalStatus.result);
+          setShowReport(true);
+        } else if (finalStatus.status === 'failed') {
+          console.error('Analysis failed:', finalStatus.error);
+          // Handle error state
+        }
+      });
+
+    } catch (err) {
+      console.error('Failed to start analysis:', err);
+      setIsAnalyzing(false);
+    }
   };
 
   useEffect(() => {
@@ -173,8 +216,8 @@ export const MedicalReportInterface: React.FC = () => {
       // Set current step to running
       setAnalysisSteps(prev => prev.map((step, index) => ({
         ...step,
-        status: index === currentStepIndex ? 'running' : 
-               index < currentStepIndex ? 'completed' : 'pending'
+        status: index === currentStepIndex ? 'running' :
+          index < currentStepIndex ? 'completed' : 'pending'
       })));
 
       // Simulate step completion after 2-3 seconds
@@ -206,14 +249,14 @@ export const MedicalReportInterface: React.FC = () => {
           <div className="text-center space-y-8">
             <div className="space-y-6">
               <h1 className="text-3xl font-bold text-foreground">Medical Report Generation</h1>
-              
+
               <div className="max-w-md mx-auto space-y-4">
                 <Select value={selectedCase} onValueChange={setSelectedCase}>
                   <SelectTrigger className="w-full h-12">
                     <SelectValue placeholder="Choose a case..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_CASES.map((caseItem) => (
+                    {availableCases.map((caseItem) => (
                       <SelectItem key={caseItem} value={caseItem}>
                         {caseItem}
                       </SelectItem>
@@ -221,7 +264,7 @@ export const MedicalReportInterface: React.FC = () => {
                   </SelectContent>
                 </Select>
 
-                <Button 
+                <Button
                   onClick={startAnalysis}
                   disabled={!selectedCase}
                   size="lg"
@@ -246,9 +289,9 @@ export const MedicalReportInterface: React.FC = () => {
             <Card className="max-w-2xl mx-auto">
               <div className="divide-y divide-border">
                 {analysisSteps.map((step, index) => (
-                  <AnalysisStepItem 
-                    key={step.id} 
-                    step={step} 
+                  <AnalysisStepItem
+                    key={step.id}
+                    step={step}
                     isVisible={index <= currentStepIndex}
                   />
                 ))}
@@ -258,7 +301,7 @@ export const MedicalReportInterface: React.FC = () => {
             {/* Report Area */}
             <Card className="max-w-4xl mx-auto min-h-[400px]">
               {showReport ? (
-                <ReportViewer content={FINAL_REPORT} />
+                <ReportViewer content={reportContent || FINAL_REPORT} />
               ) : (
                 <SkeletonLoader />
               )}
