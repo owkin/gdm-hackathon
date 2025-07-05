@@ -55,9 +55,32 @@ Click Create. It will take a few minutes to provision.
 
 You can then connect to the VM via ssh.
 
-## Available tools 
+## Repository Structure
 
-The GDM Hackathon project provides a comprehensive suite of tools for biomarker discovery and multi-modal data analysis. These tools are designed to extract interpretable and predictive signals from various types of medical data.
+```
+gdm-hackathon/
+├── gdm_hackathon/                    # Main package
+│   ├── tools/                        # Analysis tools
+│   │   ├── clinical_tool.py          # Clinical data loading
+│   │   ├── pubmed_tool.py            # PubMed literature search
+│   │   ├── medgemma_tool.py          # MedGemma 27B AI model
+│   │   ├── evaluation_tool.py        # Tool combination evaluation
+│   │   ├── heatmap_report/           # Image analysis tools
+│   │   ├── genomic_report/           # Genomic data analysis
+│   │   ├── bulk_rnaseq/              # RNA-seq pathway analysis
+│   │   └── hipe_report/              # Histopathology analysis
+│   ├── models/                       # AI model integrations
+│   ├── db/                          # Database utilities (not used)
+│   ├── poc/                         # Proof of concept tools
+│   └── config.py                    # Configuration settings
+├── api.py                           # FastAPI backend server (not used)
+├── gradio_chatbot.py                # Gradio web interface
+├── genetic_algo_code_agent.py       # Genetic algorithm agent
+├── run_chatbot.py                   # Chatbot runner
+└── pyproject.toml                   # Project dependencies
+```
+
+## Available tools
 
 ### Key Features
 
