@@ -4,7 +4,7 @@ This document explains how the frontend and backend are integrated for the GDM H
 
 ## Architecture
 
-- **Backend**: FastAPI server (`api.py`) that wraps the `smolagent_coding_agent.py` function
+- **Backend**: FastAPI server (`api.py`) that wraps the `genetic_algo_code_agent.py` function
 - **Frontend**: React/Vite app that calls the API to trigger analyses and display results
 
 ## Quick Start
@@ -76,7 +76,7 @@ Get the status of an analysis task.
   "case_id": "Case 001 - Lung Adenocarcinoma",
   "created_at": "2024-01-15T10:30:00",
   "completed_at": "2024-01-15T10:35:00",
-  "result": "Analysis results from smolagent_coding_agent...",
+  "result": "Analysis results from genetic_algo_code_agent...",
   "error": null
 }
 ```
@@ -130,7 +130,7 @@ pollTaskStatus(response.task_id, (finalStatus) => {
 ### Backend Development
 - The API runs on `http://localhost:8000`
 - API documentation available at `http://localhost:8000/docs`
-- The backend wraps the existing `run_coding_agent()` function from `smolagent_coding_agent.py`
+- The backend wraps the existing `run_coding_agent()` function from `genetic_algo_code_agent.py`
 
 ### Frontend Development
 - The frontend runs on `http://localhost:5173`

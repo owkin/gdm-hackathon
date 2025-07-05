@@ -1,32 +1,48 @@
+#!/usr/bin/env python3
+"""
+Genetic Algorithm Code Agent for Biomarker Discovery
+
+This module implements an evolutionary optimization approach to discover
+the best combination of medical reports for predicting patient survival.
+It uses a genetic algorithm with evaluation tools to evolve optimal
+biomarker combinations.
+"""
 # %%
+
+# Standard library imports
+from typing import List, Tuple
+
+# Third-party imports
 from smolagents import CodeAgent, FinalAnswerTool
 
+# Local imports
 from gdm_hackathon.models.vertex_models import get_model
+from gdm_hackathon.tools.evaluation_tool import (
+    evaluate_report_relevance_in_zero_shot,
+    seed_genetic_algorithm,
+)
+
+# Import all available report tools
 from gdm_hackathon.tools import (
-    load_anti_pd1_pathway_report,
-    load_b_cell_heatmap_report,
-    load_cdk12_heatmap_report,
-    load_cell_cycle_pathway_report,
+    # Histopathological reports
+    load_histopathological_immune_infiltration_report,
+    load_histopathological_tumor_stroma_compartments_report,
+    load_histopathological_tumor_nuclear_morphometry_report,
+    
+    # Clinical reports
     load_clinical_report,
-    load_cna_genomic_report,
-    load_cnv_genomic_report,
+    
+    # Spatial transcriptomics heatmap reports
+    load_cdk12_heatmap_report,
     load_dc_heatmap_report,
-    load_ddr_deficiency_pathway_report,
+    load_b_cell_heatmap_report,
     load_egfr_heatmap_report,
-    load_egfr_pathway_report,
-    load_emt_pathway_report,
+    load_erbb2_heatmap_report,
     load_endothelial_heatmap_report,
     load_epithelial_heatmap_report,
-    load_erbb2_heatmap_report,
     load_fgfr3_heatmap_report,
-    load_fgfr3_pathway_report,
     load_fibroblast_heatmap_report,
-    load_gii_genomic_report,
     load_granulocyte_heatmap_report,
-    load_histopathological_immune_infiltration_report,
-    load_histopathological_tumor_nuclear_morphometry_report,
-    load_histopathological_tumor_stroma_compartments_report,
-    load_hypoxia_pathway_report,
     load_il1b_heatmap_report,
     load_krt7_heatmap_report,
     load_malignant_bladder_heatmap_report,
@@ -34,41 +50,64 @@ from gdm_hackathon.tools import (
     load_momac_heatmap_report,
     load_muscle_heatmap_report,
     load_other_heatmap_report,
-    load_p53_pathway_report,
-    load_pi3k_pathway_report,
     load_pik3ca_heatmap_report,
     load_plasma_heatmap_report,
     load_rb1_heatmap_report,
     load_s100a8_heatmap_report,
-    load_snv_indel_genomic_report,
-    load_t_nk_heatmap_report,
-    load_tgf_beta_pathway_report,
-    load_tmb_genomic_report,
     load_tp53_heatmap_report,
-    query_medgemma,
+    load_t_nk_heatmap_report,
+    
+    # Genomic reports
+    load_snv_indel_genomic_report,
+    load_cnv_genomic_report,
+    load_cna_genomic_report,
+    load_gii_genomic_report,
+    load_tmb_genomic_report,
+    
+    # Pathway reports
+    load_fgfr3_pathway_report,
+    load_egfr_pathway_report,
+    load_pi3k_pathway_report,
+    load_anti_pd1_pathway_report,
+    load_tgf_beta_pathway_report,
+    load_hypoxia_pathway_report,
+    load_emt_pathway_report,
+    load_cell_cycle_pathway_report,
+    load_ddr_deficiency_pathway_report,
+    load_p53_pathway_report,
+    
+    # Helper tools
     search_pubmed,
-)
-from gdm_hackathon.tools.evaluation_tool import (
-    evaluate_report_relevance_in_zero_shot,
-    seed_genetic_algorithm,
+    query_medgemma,
 )
 
+
+# Initialize the final answer tool
 final_answer_tool = FinalAnswerTool()
 
-# %%
 
-model = get_model("gemma-3-27b")
+def create_coding_agent() -> CodeAgent:
+    """
+    Create and configure the coding agent for evolutionary optimization.
+    
+    Returns:
+        CodeAgent: Configured agent with all necessary tools and parameters.
+    """
+    # Initialize the model
+    model = get_model("gemma-3-27b")
+    
+    # Define available tools for the agent
+    available_tools = [
+        # Core evaluation tools
+        evaluate_report_relevance_in_zero_shot,
+        seed_genetic_algorithm,
 
-# %%
-# Define the coding agent
-coding_agent = CodeAgent(
-    model=model,
-    name="coding_agent",
-    description="A coding agent that selects the best 2 tools out of 3 available tools.",
-    tools=[
-        evaluate_report_relevance_in_zero_shot,  # evaluation tool
-        seed_genetic_algorithm,  # cache analysis tool
-        # spatial transcriptomics heatmap tools (cell type  / gene expression specific)
+        # Histopathological reports
+        load_histopathological_immune_infiltration_report,
+        load_histopathological_tumor_stroma_compartments_report,
+        load_histopathological_tumor_nuclear_morphometry_report,
+        
+        # Spatial transcriptomics heatmap reports
         load_cdk12_heatmap_report,
         load_dc_heatmap_report,
         load_b_cell_heatmap_report,
@@ -92,17 +131,15 @@ coding_agent = CodeAgent(
         load_s100a8_heatmap_report,
         load_tp53_heatmap_report,
         load_t_nk_heatmap_report,
-        # histopathological report family
-        load_histopathological_immune_infiltration_report,
-        load_histopathological_tumor_stroma_compartments_report,
-        load_histopathological_tumor_nuclear_morphometry_report,
-        # genomic report family
+        
+        # Genomic reports
         load_snv_indel_genomic_report,
         load_cnv_genomic_report,
         load_cna_genomic_report,
         load_gii_genomic_report,
         load_tmb_genomic_report,
-        # bulk RNAseq report family
+        
+        # Pathway reports (currently active)
         load_fgfr3_pathway_report,
         load_egfr_pathway_report,
         load_pi3k_pathway_report,
@@ -113,23 +150,40 @@ coding_agent = CodeAgent(
         load_cell_cycle_pathway_report,
         load_ddr_deficiency_pathway_report,
         load_p53_pathway_report,
-        # clinical report
+        
+        # Clinical reports
         load_clinical_report,
-        # helper tools
+        
+        # Helper tools
         search_pubmed,
         query_medgemma,
-        # final answer tool
+        
+        # Final answer tool
         final_answer_tool,
-    ],
-    max_steps=50,  # Increased from 20 to 50
-)
+    ]
+    
+    # Note: The following tools are commented out but available for future use
+    # Spatial transcriptomics heatmap tools (cell type / gene expression specific)
+    # Histopathological report family
+    # Genomic report family
+    
+    return CodeAgent(
+        model=model,
+        name="coding_agent",
+        description="A coding agent that selects the best 2 tools out of 3 available tools.",
+        tools=available_tools,
+        max_steps=50,  # Increased from 20 to 50 for more thorough optimization
+    )
 
 
-# %%
-# Function to run the coding agent
-def run_coding_agent():
-    """Run the smolagent coding agent to find the best report combination for survival prediction."""
-    prompt = """
+def get_optimization_prompt() -> str:
+    """
+    Get the comprehensive prompt for the evolutionary optimization task.
+    
+    Returns:
+        str: The formatted prompt for the genetic algorithm optimization.
+    """
+    return r"""
 # AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
 
 You are a biomedical AI researcher running an **evolutionary optimization** to discover the best combination of medical reports for predicting patient survival. Your goal is to intelligently evolve solutions based on deep analysis of evaluation results.
@@ -236,11 +290,42 @@ Very important use <code> </code> tags and not python or tool code or any other 
 
 Let's begin the optimization !
 """
-    response = coding_agent.run(prompt)
+
+
+def run_coding_agent():
+    """
+    Run the smolagent coding agent to find the best report combination for survival prediction.
+    
+    Returns:
+        The response from the coding agent containing the optimization results.
+    """
+    # Create the coding agent
+    coding_agent = create_coding_agent()
+    
+    # Run the optimization with the comprehensive prompt
+    response = coding_agent.run(get_optimization_prompt())
+    
     return response
 
 
+def main():
+    """Main function to execute the genetic algorithm optimization."""
+    print("🚀 Starting Genetic Algorithm Optimization for Biomarker Discovery...")
+    print("=" * 70)
+    
+    try:
+        result = run_coding_agent()
+        print("\n" + "=" * 70)
+        print("✅ Optimization Complete!")
+        print("=" * 70)
+        print(result)
+    except Exception as e:
+        print(f"\n❌ Error during optimization: {e}")
+        raise
+
+
+# %%
+
 if __name__ == "__main__":
-    result = run_coding_agent()
-    print(result)
+    main() 
 # %%

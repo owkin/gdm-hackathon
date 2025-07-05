@@ -8,7 +8,7 @@ while true; do
     echo "=== Starting new iteration $(date) ==="
     echo ""
     
-    python smolagent_coding_agent.py
+    python genetic_algo_code_agent.py
     
     echo ""
     echo "=== Iteration completed. Starting next iteration in 5 seconds... ==="

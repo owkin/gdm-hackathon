@@ -12,7 +12,7 @@ from contextlib import redirect_stderr, redirect_stdout
 
 import gradio as gr
 
-from smolagent_coding_agent import coding_agent
+from genetic_algo_code_agent import coding_agent
 
 
 def filter_trace_output(output_text):

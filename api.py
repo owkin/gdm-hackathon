@@ -40,7 +40,7 @@ from gdm_hackathon.tools.hipe_report.hipe_tool import (
 )
 
 # Import your existing function
-from smolagent_coding_agent import run_coding_agent
+from genetic_algo_code_agent import run_coding_agent
 
 app = FastAPI(title="GDM Hackathon API", version="1.0.0")
 
