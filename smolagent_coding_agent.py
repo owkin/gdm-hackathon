@@ -133,7 +133,7 @@ def run_coding_agent():
     """Run the smolagent coding agent to find the best report combination for survival prediction."""
     response = coding_agent.run(
         r"""
-    # AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
+# AI Agent Prompt: Evolutionary Optimization for Biomarker Discovery
 
 You are a biomedical AI researcher running an **evolutionary optimization** to discover the best combination of medical reports for predicting patient survival. Your goal is to intelligently evolve solutions based on deep analysis of evaluation results.
 
